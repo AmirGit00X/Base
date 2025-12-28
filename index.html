@@ -3,367 +3,340 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Base64 Amirhosein</title>
+    <title>دوز حرفه‌ای</title>
+    
+    <script src="https://js.pusher.com/8.4.0/pusher.min.js"></script>
+    <script src="https://js.pusher.com/beams/2.1.0/push-notifications-cdn.js"></script>
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;500;800&display=swap');
-
         :root {
-            --primary: #00f2fe;
-            --secondary: #4facfe;
-            --bg: #080a12;
-            --card-bg: rgba(22, 28, 45, 0.9);
-            --error: #ff3366;
-            --success: #00ff88;
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --accent-x: #3b82f6;
+            --accent-o: #f43f5e;
+            --shadow: rgba(0, 0, 0, 0.3);
         }
 
-        * { 
-            box-sizing: border-box; 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        html, body {
-            height: 100%;
-            width: 100%;
-            margin: 0;
-            padding: 0;
-            background: var(--bg);
-            overflow-x: hidden;
-            scroll-behavior: smooth;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body {
-            font-family: 'Vazirmatn', sans-serif;
-            color: #fff;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; overflow: hidden;
         }
 
-        .bg-animate {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle at 50% 50%, #16213e 0%, #080a12 100%);
-            z-index: -1;
+        .screen { display: none; width: 100vw; height: 100vh; max-width: 450px; flex-direction: column; padding: 20px; align-items: center; justify-content: center; }
+        .active-screen { display: flex; }
+
+        h1 { font-size: 1.8rem; text-shadow: 0 0 10px var(--accent-x); margin-bottom: 20px; }
+
+        /* اصلاح فاصله دکمه‌ها در منوی اصلی */
+        .menu-group { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+        .menu-btn {
+            width: 100%; padding: 14px;
+            background: var(--card-bg); color: white;
+            border: 2px solid #334155; border-radius: 15px;
+            font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.2s;
         }
+        .menu-btn:hover { background: var(--accent-x); }
 
-        .bg-glow {
-            position: absolute;
-            width: 150vw; height: 150vw;
-            background: radial-gradient(circle, rgba(0, 242, 254, 0.08) 0%, transparent 65%);
-            top: -25%; left: -25%;
-            animation: moveGlow 15s linear infinite;
-        }
+        .room-list { width: 100%; max-height: 300px; overflow-y: auto; background: rgba(255,255,255,0.05); border-radius: 15px; padding: 10px; margin-bottom: 15px; }
+        .room-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: var(--card-bg); margin-bottom: 8px; border-radius: 10px; border-right: 4px solid var(--accent-x); }
+        .join-btn { background: var(--accent-x); color: white; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
 
-        @keyframes moveGlow { 
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
+        .scoreboard { display: flex; gap: 20px; background: var(--card-bg); padding: 12px 25px; border-radius: 20px; margin-bottom: 15px; text-align: center; }
+        .score-item { display: flex; flex-direction: column; }
+        .score-val { font-size: 1.4rem; font-weight: bold; }
+        .score-label { font-size: 0.75rem; color: #94a3b8; }
 
-        .container {
-            width: 100%;
-            min-height: 100vh;
-            background: var(--card-bg);
-            backdrop-filter: blur(20px);
-            padding: 20px 25px 40px 25px; 
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start; 
-            border: none;
-            box-shadow: none;
-            animation: fadeIn 0.8s ease;
-        }
+        .status-text { font-size: 1.1rem; font-weight: 500; height: 30px; margin-bottom: 10px; color: var(--accent-x); }
+        .board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 20px; }
+        .cell { width: 85px; height: 85px; background: var(--card-bg); border-radius: 15px; display: flex; justify-content: center; align-items: center; font-size: 2.3rem; font-weight: bold; cursor: pointer; box-shadow: 0 5px 10px var(--shadow); }
+        .cell.x { color: var(--accent-x); text-shadow: 0 0 10px var(--accent-x); }
+        .cell.o { color: var(--accent-o); text-shadow: 0 0 10px var(--accent-o); }
 
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        h2 {
-            text-align: center;
-            font-weight: 800;
-            font-size: 26px;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 25px;
-            margin-top: 10px;
-            filter: drop-shadow(0 0 10px rgba(0, 242, 254, 0.3));
-        }
-
-        .field { margin-bottom: 18px; }
+        .controls { display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 15px; }
+        .level-switch { display: flex; background: var(--card-bg); border-radius: 50px; padding: 4px; gap: 2px; }
+        .lvl-btn { flex: 1; padding: 7px; border: none; background: transparent; color: #94a3b8; border-radius: 50px; cursor: pointer; font-size: 0.8rem; }
+        .lvl-btn.active { background: var(--accent-x); color: white; }
         
-        label { 
-            display: block; 
-            margin-bottom: 8px; 
-            font-size: 13px; 
-            color: var(--secondary);
-            font-weight: 500;
-        }
+        .action-btns { display: flex; gap: 8px; }
+        .btn { flex: 1; padding: 10px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 0.9rem; }
+        .btn-reset { background: #334155; color: white; }
+        .btn-clear { background: #f43f5e; color: white; }
 
-        textarea, input {
-            width: 100%;
-            padding: 15px;
-            border-radius: 18px;
-            border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(0, 0, 0, 0.4);
-            color: #fff;
-            outline: none;
-            font-size: 15px;
-            font-family: inherit;
-        }
-
-        textarea:focus, input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 15px rgba(0, 242, 254, 0.2);
-        }
-
-        .settings-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .actions {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-top: 5px;
-        }
-
-        button {
-            width: 100%;
-            padding: 16px;
-            border: none;
-            border-radius: 18px;
-            cursor: pointer;
-            font-weight: 800;
-            font-size: 16px;
-            font-family: inherit;
-        }
-
-        .btn-enc {
-            background: linear-gradient(45deg, var(--secondary), var(--primary));
-            color: #080a12;
-            box-shadow: 0 8px 15px rgba(0, 242, 254, 0.2);
-        }
-
-        .btn-dec {
-            background: transparent;
-            border: 2px solid var(--secondary);
-            color: var(--secondary);
-        }
-
-        button:active { transform: scale(0.96); }
-
-        #errorMsg {
-            background: rgba(255, 51, 102, 0.15);
-            color: var(--error);
-            padding: 12px;
-            border-radius: 15px;
-            margin-top: 15px;
-            display: none;
-            font-size: 13px;
-            text-align: center;
-            border: 1px solid var(--error);
-            animation: shake 0.4s;
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
-        }
-
-        .result-area {
-            margin-top: 25px;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 20px;
-            display: none;
-            border: 1px solid var(--primary);
-            position: relative;
-        }
-
-        .copy-btn {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            font-size: 11px;
-            padding: 5px 12px;
-            background: var(--primary);
-            color: #080a12;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        #finalText {
-            word-break: break-all;
-            font-size: 14px;
-            line-height: 1.7;
-            color: #e0e0e0;
-            margin-top: 15px;
-        }
-
-        .toast {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%) translateY(150px);
-            background: var(--success);
-            color: #080a12;
-            padding: 12px 25px;
-            border-radius: 50px;
-            font-weight: 800;
-            z-index: 9999;
-            box-shadow: 0 8px 20px rgba(0, 255, 136, 0.3);
-            transition: 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28);
-        }
-
-        .toast.show { transform: translateX(-50%) translateY(0); }
+        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.96); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; text-align: center; padding: 20px; }
     </style>
 </head>
 <body>
 
-<div class="bg-animate"><div class="bg-glow"></div></div>
-
-<div class="container">
-    <h2>Base64 Amirhosein</h2>
-    
-    <div class="field">
-        <label>متن یا کد ورودی</label>
-        <textarea id="userInput" rows="4" placeholder="پیام خود را اینجا بنویسید..."></textarea>
-    </div>
-
-    <div class="settings-row">
-        <div class="field">
-            <label>رمز عبور</label>
-            <input type="text" id="passKey" placeholder="Password">
-        </div>
-        <div class="field">
-            <label>انقضا (دقیقه)</label>
-            <input type="number" id="expiryMin" value="0" min="0">
+    <div id="main-menu" class="screen active-screen">
+        <h1>دوز پیشرفته</h1>
+        <div class="menu-group">
+            <button class="menu-btn" onclick="showScreen('lobby-screen')">بازی آنلاین</button>
+            <button class="menu-btn" onclick="startOffline('pvp')">دو نفره آفلاین</button>
+            <button class="menu-btn" onclick="startOffline('pvc')">بازی با ربات</button>
         </div>
     </div>
 
-    <div class="actions">
-        <button class="btn-enc" onclick="handle(true)">رمزگذاری</button>
-        <button class="btn-dec" onclick="handle(false)">رمزگشایی</button>
+    <div id="lobby-screen" class="screen">
+        <h1>لابی آنلاین</h1>
+        <div class="room-list" id="room-container">
+            <p style="text-align:center; color:#64748b;">در حال جستجوی اتاق‌ها...</p>
+        </div>
+        <button class="menu-btn" style="background: #10b981; margin-bottom: 5px;" onclick="createRoom()">+ ساخت اتاق جدید</button>
+        <button class="menu-btn" onclick="showScreen('main-menu')">برگشت</button>
     </div>
 
-    <div id="errorMsg"></div>
+    <div id="game-screen" class="screen">
+        <div class="scoreboard">
+            <div class="score-item">
+                <span class="score-val" id="score-x">0</span>
+                <span class="score-label">X (امتیاز)</span>
+            </div>
+            <div style="border-left: 1px solid #334155;"></div>
+            <div class="score-item">
+                <span class="score-val" id="score-o">0</span>
+                <span class="score-label">O (امتیاز)</span>
+            </div>
+        </div>
 
-    <div id="resultBox" class="result-area">
-        <div class="copy-btn" onclick="copyResult()">کپی</div>
-        <label id="resultLabel" style="color: var(--primary); font-weight: bold;"></label>
-        <p id="finalText"></p>
+        <div class="status-text" id="status">نوبت X</div>
+
+        <div class="board" id="board">
+            <div class="cell" data-index="0" onclick="handleCellClick(event)"></div>
+            <div class="cell" data-index="1" onclick="handleCellClick(event)"></div>
+            <div class="cell" data-index="2" onclick="handleCellClick(event)"></div>
+            <div class="cell" data-index="3" onclick="handleCellClick(event)"></div>
+            <div class="cell" data-index="4" onclick="handleCellClick(event)"></div>
+            <div class="cell" data-index="5" onclick="handleCellClick(event)"></div>
+            <div class="cell" data-index="6" onclick="handleCellClick(event)"></div>
+            <div class="cell" data-index="7" onclick="handleCellClick(event)"></div>
+            <div class="cell" data-index="8" onclick="handleCellClick(event)"></div>
+        </div>
+
+        <div class="controls">
+            <div class="level-switch" id="level-container" style="display: none;">
+                <button class="lvl-btn active" onclick="setLevel('easy')">آسان</button>
+                <button class="lvl-btn" onclick="setLevel('medium')">متوسط</button>
+                <button class="lvl-btn" onclick="setLevel('hard')">سخت</button>
+            </div>
+
+            <div class="action-btns">
+                <button class="btn btn-reset" onclick="resetGame()">تکرار دست</button>
+                <button class="btn btn-clear" id="clear-score-btn" onclick="clearScores()">صفر امتیاز</button>
+                <button class="btn btn-reset" style="background: #475569;" onclick="exitToMenu()">خروج</button>
+            </div>
+            <p id="online-info" style="text-align: center; font-size: 0.8rem; color: #94a3b8; margin-top: 5px;"></p>
+        </div>
     </div>
-</div>
 
-<div id="copyToast" class="toast">✓ با موفقیت کپی شد</div>
+    <div class="overlay" id="overlay">
+        <h1 id="winner-text" style="margin-bottom: 25px;"></h1>
+        <button class="menu-btn" id="overlay-action-btn" style="width: 200px;" onclick="resetGame()">شروع دست جدید</button>
+    </div>
 
-<script>
-    // کلید منحصر به فرد برای الگوریتم اختصاصی ما
-    const PRIVATE_KEY = "AMIRHOSEIN_X_99";
+    <script>
+        const PUSHER_KEY = '6efd3e505930fedf4fb9';
+        const CLUSTER = 'eu';
+        let pusher = new Pusher(PUSHER_KEY, { cluster: CLUSTER, forceTLS: true });
+        let gameChannel = null;
+        let lobbyChannel = pusher.subscribe('lobby');
 
-    // تابع دریافت ساعت جهانی (API)
-    async function getGlobalTime() {
-        try {
-            const response = await fetch('https://worldtimeapi.org/api/timezone/Etc/UTC');
-            const data = await response.json();
-            return new Date(data.utc_datetime).getTime();
-        } catch (err) {
-            // در صورت قطع اینترنت، از زمان سیستم استفاده می‌شود (اما هشدار امنیتی داده می‌شود)
-            return Date.now();
-        }
-    }
+        let board = ["", "", "", "", "", "", "", "", ""];
+        let currentPlayer = "X";
+        let gameActive = true;
+        let mode = "pvp";
+        let difficulty = "easy";
+        let scores = { X: 0, O: 0 };
+        let mySymbol = null;
+        let roomID = null;
 
-    // الگوریتم درهم‌ریزی اختصاصی (XOR) برای جلوگیری از رمزگشایی توسط سایر برنامه‌ها
-    function customCrypt(str) {
-        let result = "";
-        for (let i = 0; i < str.length; i++) {
-            result += String.fromCharCode(str.charCodeAt(i) ^ PRIVATE_KEY.charCodeAt(i % PRIVATE_KEY.length));
-        }
-        return btoa(unescape(encodeURIComponent(result)));
-    }
+        const winningConditions = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
 
-    function customDecrypt(str) {
-        const decoded = decodeURIComponent(escape(atob(str)));
-        let result = "";
-        for (let i = 0; i < decoded.length; i++) {
-            result += String.fromCharCode(decoded.charCodeAt(i) ^ PRIVATE_KEY.charCodeAt(i % PRIVATE_KEY.length));
-        }
-        return result;
-    }
-
-    async function handle(isEncrypt) {
-        const input = document.getElementById('userInput').value.trim();
-        const key = document.getElementById('passKey').value;
-        const expiryInput = document.getElementById('expiryMin').value;
-        const errorDiv = document.getElementById('errorMsg');
-        const resBox = document.getElementById('resultBox');
-        const resText = document.getElementById('finalText');
-        const resLabel = document.getElementById('resultLabel');
-
-        errorDiv.style.display = "none";
-        resBox.style.display = "none";
-
-        if (!input) {
-            showError("لطفاً ورودی را پر کنید!");
-            return;
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
+            document.getElementById(id).classList.add('active-screen');
         }
 
-        // دریافت زمان جهانی قبل از پردازش
-        const currentGlobalTime = await getGlobalTime();
+        function exitToMenu() { location.reload(); }
 
-        try {
-            if (isEncrypt) {
-                const expTime = expiryInput > 0 ? currentGlobalTime + (expiryInput * 60000) : 0;
-                const payload = JSON.stringify({ p: input, k: key, e: expTime });
-                const finalCode = customCrypt(payload);
-                
-                resLabel.innerText = "کد رمزگذاری شده (اختصاصی):";
-                resText.innerText = finalCode;
-                resBox.style.display = "block";
-                setTimeout(() => resBox.scrollIntoView({ behavior: 'smooth' }), 100);
-            } else {
-                try {
-                    const decryptedPayload = customDecrypt(input);
-                    const data = JSON.parse(decryptedPayload);
+        function clearScores() {
+            scores = { X: 0, O: 0 };
+            document.getElementById('score-x').innerText = "0";
+            document.getElementById('score-o').innerText = "0";
+            resetGame();
+        }
 
-                    if (data.k !== key) {
-                        showError("رمز عبور اشتباه است!");
-                        return;
-                    }
+        function startOffline(newMode) {
+            mode = newMode;
+            document.getElementById('level-container').style.display = (mode === 'pvc') ? 'flex' : 'none';
+            document.getElementById('clear-score-btn').style.display = 'block';
+            document.getElementById('online-info').innerText = "";
+            showScreen('game-screen');
+            clearScores();
+        }
 
-                    if (data.e !== 0 && currentGlobalTime > data.e) {
-                        showError("طبق ساعت جهانی، زمان این کد به پایان رسیده است!");
-                        return;
-                    }
+        // بخش آنلاین
+        lobbyChannel.bind('new-room', (data) => {
+            const container = document.getElementById('room-container');
+            if(container.innerHTML.includes('جستجو')) container.innerHTML = '';
+            const div = document.createElement('div');
+            div.className = 'room-item';
+            div.innerHTML = `<span>اتاق ${data.id}</span> <button class="join-btn" onclick="joinRoom(${data.id})">ورود</button>`;
+            container.appendChild(div);
+        });
 
-                    resLabel.innerText = "متن رمزگشایی شده:";
-                    resText.innerText = data.p;
-                    resBox.style.display = "block";
-                    setTimeout(() => resBox.scrollIntoView({ behavior: 'smooth' }), 100);
-                } catch(e) {
-                    showError("این کد توسط هیچ برنامه دیگری قابل خواندن نیست و در این برنامه نیز نامعتبر است!");
+        function createRoom() {
+            roomID = Math.floor(1000 + Math.random() * 9000);
+            mode = 'online'; mySymbol = 'X';
+            initOnline(roomID);
+            lobbyChannel.trigger('client-new-room', { id: roomID });
+            document.getElementById('clear-score-btn').style.display = 'none';
+            document.getElementById('online-info').innerText = "کد اتاق: " + roomID + " | ۵ دست بازی";
+            showScreen('game-screen');
+        }
+
+        function joinRoom(id) {
+            roomID = id;
+            mode = 'online'; mySymbol = 'O';
+            initOnline(roomID);
+            document.getElementById('clear-score-btn').style.display = 'none';
+            document.getElementById('online-info').innerText = "متصل به اتاق " + id + " | ۵ دست بازی";
+            showScreen('game-screen');
+        }
+
+        function initOnline(id) {
+            gameChannel = pusher.subscribe('game-' + id);
+            gameChannel.bind('client-move', (data) => {
+                if(data.player !== mySymbol) makeMove(data.index, data.player);
+            });
+        }
+
+        function handleCellClick(e) {
+            const index = e.target.getAttribute('data-index');
+            if (board[index] !== "" || !gameActive) return;
+            if (mode === 'online' && currentPlayer !== mySymbol) return;
+
+            makeMove(index, currentPlayer);
+
+            if (mode === 'online') {
+                gameChannel.trigger('client-move', { index: index, player: mySymbol });
+            } else if (gameActive && mode === "pvc" && currentPlayer === "O") {
+                setTimeout(robotMove, 500);
+            }
+        }
+
+        function makeMove(index, player) {
+            board[index] = player;
+            const cell = document.querySelectorAll('.cell')[index];
+            cell.innerText = player;
+            cell.classList.add(player.toLowerCase());
+            
+            checkResult();
+            if (gameActive) {
+                currentPlayer = currentPlayer === "X" ? "O" : "X";
+                const status = document.getElementById('status');
+                status.innerText = `نوبت بازیکن ${currentPlayer}`;
+                status.style.color = currentPlayer === "X" ? "var(--accent-x)" : "var(--accent-o)";
+            }
+        }
+
+        function robotMove() {
+            let move = (difficulty === "easy") ? getRandomMove() : 
+                       (difficulty === "medium" && Math.random() > 0.5) ? getRandomMove() : getBestMove();
+            if (move !== null) makeMove(move, "O");
+        }
+
+        function getRandomMove() {
+            let avail = board.map((v, i) => v === "" ? i : null).filter(v => v !== null);
+            return avail[Math.floor(Math.random() * avail.length)];
+        }
+
+        function getBestMove() {
+            let bestScore = -Infinity, move = null;
+            for (let i = 0; i < 9; i++) {
+                if (board[i] === "") {
+                    board[i] = "O";
+                    let score = minimax(board, 0, false);
+                    board[i] = "";
+                    if (score > bestScore) { bestScore = score; move = i; }
                 }
             }
-        } catch (err) {
-            showError("خطای امنیتی در پردازش کد!");
+            return move;
         }
-    }
 
-    function showError(msg) {
-        const errorDiv = document.getElementById('errorMsg');
-        errorDiv.innerText = "⚠️ " + msg;
-        errorDiv.style.display = "block";
-    }
+        function minimax(currBoard, depth, isMax) {
+            let res = checkWinnerScore();
+            if (res !== null) return res === "O" ? 10 : res === "X" ? -10 : 0;
+            if (isMax) {
+                let best = -Infinity;
+                for (let i=0; i<9; i++) if(currBoard[i]===""){ currBoard[i]="O"; best=Math.max(best, minimax(currBoard,depth+1,false)); currBoard[i]=""; }
+                return best;
+            } else {
+                let best = Infinity;
+                for (let i=0; i<9; i++) if(currBoard[i]===""){ currBoard[i]="X"; best=Math.min(best, minimax(currBoard,depth+1,true)); currBoard[i]=""; }
+                return best;
+            }
+        }
 
-    function copyResult() {
-        const text = document.getElementById('finalText').innerText;
-        navigator.clipboard.writeText(text).then(() => {
-            const toast = document.getElementById('copyToast');
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 2000);
-        });
-    }
-</script>
+        function checkWinnerScore() {
+            for (let cond of winningConditions) {
+                if (board[cond[0]] && board[cond[0]] === board[cond[1]] && board[cond[0]] === board[cond[2]]) return board[cond[0]];
+            }
+            return board.includes("") ? null : "tie";
+        }
 
+        function checkResult() {
+            let res = checkWinnerScore();
+            if (res === "tie") endGame("بازی مساوی شد!");
+            else if (res) {
+                scores[res]++;
+                document.getElementById('score-x').innerText = scores.X;
+                document.getElementById('score-o').innerText = scores.O;
+                
+                // شرط پیروزی در حالت آنلاین (۳ برد از ۵ دست)
+                if (mode === 'online' && (scores.X === 3 || scores.O === 3)) {
+                    endGame(`پایان بازی! برنده نهایی: بازیکن ${res}`, true);
+                } else {
+                    endGame(`بازیکن ${res} این دست را برد!`);
+                }
+            }
+        }
+
+        function endGame(msg, isFinal = false) {
+            gameActive = false;
+            document.getElementById('winner-text').innerText = msg;
+            const actionBtn = document.getElementById('overlay-action-btn');
+            
+            if (isFinal) {
+                actionBtn.innerText = "بازگشت به لابی";
+                actionBtn.onclick = () => { location.reload(); };
+            } else {
+                actionBtn.innerText = "شروع دست جدید";
+                actionBtn.onclick = resetGame;
+            }
+            document.getElementById('overlay').style.display = 'flex';
+        }
+
+        function resetGame() {
+            board = ["", "", "", "", "", "", "", "", ""];
+            gameActive = true; currentPlayer = "X";
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('status').innerText = "نوبت X";
+            document.querySelectorAll('.cell').forEach(c => { c.innerText = ""; c.classList.remove('x', 'o'); });
+        }
+
+        function setLevel(lvl) {
+            difficulty = lvl;
+            document.querySelectorAll('.lvl-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.innerText.includes(lvl === 'easy' ? 'آسان' : lvl === 'medium' ? 'متوسط' : 'سخت'));
+            });
+            clearScores();
+        }
+    </script>
 </body>
 </html>
