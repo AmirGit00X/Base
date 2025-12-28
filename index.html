@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>دوز حرفه‌ای</title>
+    <title>دوز حرفه‌ای آنلاین</title>
     
     <script src="https://js.pusher.com/8.4.0/pusher.min.js"></script>
-    <script src="https://js.pusher.com/beams/2.1.0/push-notifications-cdn.js"></script>
     
     <style>
         :root {
@@ -33,7 +32,6 @@
 
         h1 { font-size: 1.8rem; text-shadow: 0 0 10px var(--accent-x); margin-bottom: 20px; }
 
-        /* اصلاح فاصله دکمه‌ها در منوی اصلی */
         .menu-group { width: 100%; display: flex; flex-direction: column; gap: 8px; }
         .menu-btn {
             width: 100%; padding: 14px;
@@ -85,7 +83,7 @@
     <div id="lobby-screen" class="screen">
         <h1>لابی آنلاین</h1>
         <div class="room-list" id="room-container">
-            <p style="text-align:center; color:#64748b;">در حال جستجوی اتاق‌ها...</p>
+            <p id="lobby-status" style="text-align:center; color:#64748b;">در حال جستجوی اتاق‌ها...</p>
         </div>
         <button class="menu-btn" style="background: #10b981; margin-bottom: 5px;" onclick="createRoom()">+ ساخت اتاق جدید</button>
         <button class="menu-btn" onclick="showScreen('main-menu')">برگشت</button>
@@ -142,9 +140,17 @@
     <script>
         const PUSHER_KEY = '6efd3e505930fedf4fb9';
         const CLUSTER = 'eu';
-        let pusher = new Pusher(PUSHER_KEY, { cluster: CLUSTER, forceTLS: true });
+        
+        // تنظیمات Pusher
+        let pusher = new Pusher(PUSHER_KEY, { 
+            cluster: CLUSTER, 
+            forceTLS: true,
+            userAuthentication: { endpoint: "/unused" } // برای جلوگیری از خطای آتنتیکیشن در حالت کلاینت
+        });
+
         let gameChannel = null;
-        let lobbyChannel = pusher.subscribe('lobby');
+        // تغییر نام کانال لابی برای اجازه دادن به Client Events
+        let lobbyChannel = pusher.subscribe('private-lobby');
 
         let board = ["", "", "", "", "", "", "", "", ""];
         let currentPlayer = "X";
@@ -180,11 +186,17 @@
             clearScores();
         }
 
-        // بخش آنلاین
-        lobbyChannel.bind('new-room', (data) => {
+        // بخش دریافت لیست اتاق‌ها (گوش دادن به رویداد کلاینت)
+        lobbyChannel.bind('client-new-room', (data) => {
             const container = document.getElementById('room-container');
-            if(container.innerHTML.includes('جستجو')) container.innerHTML = '';
+            const status = document.getElementById('lobby-status');
+            if(status) status.remove();
+            
+            // جلوگیری از نمایش اتاق تکراری
+            if(document.getElementById('room-' + data.id)) return;
+
             const div = document.createElement('div');
+            div.id = 'room-' + data.id;
             div.className = 'room-item';
             div.innerHTML = `<span>اتاق ${data.id}</span> <button class="join-btn" onclick="joinRoom(${data.id})">ورود</button>`;
             container.appendChild(div);
@@ -194,9 +206,14 @@
             roomID = Math.floor(1000 + Math.random() * 9000);
             mode = 'online'; mySymbol = 'X';
             initOnline(roomID);
-            lobbyChannel.trigger('client-new-room', { id: roomID });
+            
+            // ارسال سیگنال ساخت اتاق به بقیه (بعد از نیم ثانیه برای اطمینان از اتصال)
+            setTimeout(() => {
+                lobbyChannel.trigger('client-new-room', { id: roomID });
+            }, 500);
+
             document.getElementById('clear-score-btn').style.display = 'none';
-            document.getElementById('online-info').innerText = "کد اتاق: " + roomID + " | ۵ دست بازی";
+            document.getElementById('online-info').innerText = "کد اتاق: " + roomID + " | در انتظار حریف...";
             showScreen('game-screen');
         }
 
@@ -205,12 +222,14 @@
             mode = 'online'; mySymbol = 'O';
             initOnline(roomID);
             document.getElementById('clear-score-btn').style.display = 'none';
-            document.getElementById('online-info').innerText = "متصل به اتاق " + id + " | ۵ دست بازی";
+            document.getElementById('online-info').innerText = "متصل به اتاق " + id;
             showScreen('game-screen');
+            resetGame();
         }
 
         function initOnline(id) {
-            gameChannel = pusher.subscribe('game-' + id);
+            // استفاده از پیشوند private برای کانال بازی
+            gameChannel = pusher.subscribe('private-game-' + id);
             gameChannel.bind('client-move', (data) => {
                 if(data.player !== mySymbol) makeMove(data.index, data.player);
             });
@@ -245,6 +264,7 @@
             }
         }
 
+        // منطق هوش مصنوعی و برنده (بدون تغییر)
         function robotMove() {
             let move = (difficulty === "easy") ? getRandomMove() : 
                        (difficulty === "medium" && Math.random() > 0.5) ? getRandomMove() : getBestMove();
@@ -298,7 +318,6 @@
                 document.getElementById('score-x').innerText = scores.X;
                 document.getElementById('score-o').innerText = scores.O;
                 
-                // شرط پیروزی در حالت آنلاین (۳ برد از ۵ دست)
                 if (mode === 'online' && (scores.X === 3 || scores.O === 3)) {
                     endGame(`پایان بازی! برنده نهایی: بازیکن ${res}`, true);
                 } else {
