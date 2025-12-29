@@ -3,236 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>پلتفرم بازی آنلاین</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <title>مجموعه بازی آنلاین</title>
     <style>
-        :root {
-            --primary: #6366f1;
-            --bg: #0f172a;
-            --card: #1e293b;
-            --text: #f8fafc;
-        }
-
-        body {
-            font-family: 'Tahoma', sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            overflow: hidden;
-        }
-
-        /* صفحه ورود */
-        #login-screen, #lobby-screen, #game-screen {
-            background: var(--card);
-            padding: 2rem;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            text-align: center;
-            width: 90%;
-            max-width: 400px;
-        }
-
-        input {
-            width: 100%;
-            padding: 12px;
-            margin: 1rem 0;
-            border-radius: 8px;
-            border: none;
-            background: #334155;
-            color: white;
-            box-sizing: border-box;
-        }
-
-        button {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: 0.3s;
-            width: 100%;
-            font-weight: bold;
-        }
-
-        button:hover { background: #4f46e5; }
-
-        /* لیست بازی‌ها */
-        .game-list {
-            display: grid;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .game-item {
-            background: #334155;
-            padding: 15px;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .game-item:hover { transform: scale(1.03); background: #475569; }
-
-        /* صفحه بازی دوز */
-        .board {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin: 20px 0;
-        }
-
-        .cell {
-            width: 80px;
-            height: 80px;
-            background: #334155;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 2rem;
-            border-radius: 10px;
-            cursor: pointer;
-        }
-
+        :root { --p: #6200ee; --s: #03dac6; }
+        body { font-family: Tahoma, sans-serif; background: #121212; color: white; text-align: center; margin: 0; }
+        .screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
         .hidden { display: none !important; }
+        button { background: var(--p); color: white; border: none; padding: 12px 25px; margin: 10px; border-radius: 8px; cursor: pointer; font-size: 16px; width: 200px; }
+        input { padding: 12px; border-radius: 8px; border: none; width: 180px; text-align: center; margin-bottom: 10px; }
+        .grid { display: grid; gap: 5px; background: #333; padding: 5px; margin-top: 20px; }
+        .cell { width: 60px; height: 60px; background: #1e1e1e; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; }
+        #timer { font-size: 24px; color: #ff0266; font-weight: bold; }
+        .back-btn { background: #333; }
+        #rooms-list { width: 100%; max-width: 400px; }
     </style>
 </head>
 <body>
 
-    <div id="login-screen">
-        <h2><i class="fas fa-gamepad"></i> ورود به بازی</h2>
-        <input type="text" id="username" placeholder="نام کاربری خود را وارد کنید...">
-        <button onclick="joinLobby()">ورود به لابی</button>
-    </div>
+    <div id="app">
+        <div id="login-screen" class="screen">
+            <h2>نام کاربری خود را وارد کنید</h2>
+            <input type="text" id="username-in" placeholder="مثلاً: علی">
+            <button onclick="login()">شروع</button>
+        </div>
 
-    <div id="lobby-screen" class="hidden">
-        <h3>خوش آمدی <span id="display-name"></span>!</h3>
-        <p>یک بازی را انتخاب کن:</p>
-        <div class="game-list">
-            <div class="game-item" onclick="startGame('tic-tac-toe')">
-                <span>دوز سه تایی</span>
-                <i class="fas fa-times"></i>
-            </div>
-            <div class="game-item" onclick="startGame('connect4')">
-                <span>دوز چهارتایی (بزودی)</span>
-                <i class="fas fa-columns"></i>
-            </div>
-            <div class="game-item" onclick="startGame('minesweeper')">
-                <span>مین‌روب (بزودی)</span>
-                <i class="fas fa-bomb"></i>
+        <div id="menu-screen" class="screen hidden">
+            <h3 id="user-tag"></h3>
+            <button onclick="openSubMenu('tictactoe')">دوز سه تایی (3x3)</button>
+            <button onclick="openSubMenu('connect4')">دوز چهارتایی (4x4)</button>
+            <button onclick="openSubMenu('minesweeper')">مین‌روب (بزودی)</button>
+        </div>
+
+        <div id="mode-screen" class="screen hidden">
+            <h3 id="game-title"></h3>
+            <button onclick="startMode('online')">بازی آنلاین</button>
+            <button onclick="startMode('offline')">بازی آفلاین (با دوست)</button>
+            <button onclick="startMode('ai')">بازی با ربات</button>
+            <button class="back-btn" onclick="showScreen('menu-screen')">بازگشت</button>
+        </div>
+
+        <div id="lobby-screen" class="screen hidden">
+            <h3>اتاق‌های موجود</h3>
+            <div id="rooms-list"></div>
+            <button onclick="createRoom()">+ ساخت اتاق جدید</button>
+            <button class="back-btn" onclick="showScreen('mode-screen')">بازگشت</button>
+        </div>
+
+        <div id="game-screen" class="screen hidden">
+            <div id="timer-box">زمان باقی‌مانده: <span id="timer">60</span></div>
+            <div id="turn-info">نوبت شماست</div>
+            <div id="board" class="grid"></div>
+            <div style="margin-top:20px;">
+                <button onclick="leaveGame()" class="back-btn">خروج از بازی</button>
+                <button id="reset-btn" onclick="resetOffline()" class="hidden">صفر کردن امتیاز</button>
             </div>
         </div>
     </div>
 
-    <div id="game-screen" class="hidden">
-        <h4 id="status">در انتظار رقیب...</h4>
-        <div id="game-board" class="board">
-            </div>
-        <button onclick="backToLobby()" style="background: #ef4444;">خروج از بازی</button>
-    </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue, update, push } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyDTZ68yTUyrpoKJdVRQzY7ZJ2mUUrWv-PM",
-            authDomain: "my-online-game-91998.firebaseapp.com",
-            projectId: "my-online-game-91998",
-            storageBucket: "my-online-game-91998.firebasestorage.app",
-            messagingSenderId: "656716202334",
-            appId: "1:656716202334:web:1ded52f8ac914b2b61cfcf"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-
-        let currentUser = "";
-        let gameId = "global_room"; // برای سادگی در نسخه اول
-
-        // ورود به لابی
-        window.joinLobby = function() {
-            const name = document.getElementById('username').value;
-            if(!name) return alert("نام را وارد کنید");
-            currentUser = name;
-            document.getElementById('display-name').innerText = name;
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('lobby-screen').classList.remove('hidden');
-        }
-
-        // شروع بازی (مثال: دوز)
-        window.startGame = function(gameType) {
-            if(gameType !== 'tic-tac-toe') return alert("این بازی در نسخه بعدی اضافه می‌شود!");
-            
-            document.getElementById('lobby-screen').classList.add('hidden');
-            document.getElementById('game-screen').classList.remove('hidden');
-            initTicTacToe();
-        }
-
-        // منطق بازی دوز آنلاین
-        function initTicTacToe() {
-            const boardDiv = document.getElementById('game-board');
-            boardDiv.innerHTML = '';
-            for(let i=0; i<9; i++) {
-                const cell = document.createElement('div');
-                cell.className = 'cell';
-                cell.dataset.index = i;
-                cell.onclick = () => makeMove(i);
-                boardDiv.appendChild(cell);
-            }
-
-            // گوش دادن به تغییرات دیتابیس
-            onValue(ref(db, 'games/' + gameId), (snapshot) => {
-                const data = snapshot.val();
-                if(!data) {
-                    resetGameData();
-                    return;
-                }
-                renderBoard(data.board);
-                updateStatus(data);
-            });
-        }
-
-        function makeMove(index) {
-            const gameRef = ref(db, 'games/' + gameId);
-            onValue(gameRef, (snapshot) => {
-                const data = snapshot.val();
-                if(data && data.board[index] === "" && data.turn === currentUser) {
-                    const newBoard = [...data.board];
-                    newBoard[index] = data.symbol;
-                    const nextTurn = "Player2"; // سیستم نوبت‌دهی ساده شده
-                    update(gameRef, { board: newBoard, turn: nextTurn });
-                }
-            }, { onlyOnce: true });
-        }
-
-        function renderBoard(board) {
-            const cells = document.querySelectorAll('.cell');
-            board.forEach((val, i) => {
-                cells[i].innerText = val;
-                cells[i].style.pointerEvents = val === "" ? "auto" : "none";
-            });
-        }
-
-        function resetGameData() {
-            set(ref(db, 'games/' + gameId), {
-                board: Array(9).fill(""),
-                turn: currentUser,
-                symbol: "X"
-            });
-        }
-
-        window.backToLobby = function() {
-            document.getElementById('game-screen').classList.add('hidden');
-            document.getElementById('lobby-screen').classList.remove('hidden');
-        }
-    </script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
