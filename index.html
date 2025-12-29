@@ -2,360 +2,50 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>دوز حرفه‌ای آنلاین</title>
-    
-    <script src="https://js.pusher.com/8.4.0/pusher.min.js"></script>
-    
+    <title>تست بازی دوز</title>
+    <script src="https://js.pusher.com/8.0/pusher.min.js"></script>
     <style>
-        :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --text-main: #f8fafc;
-            --accent-x: #3b82f6;
-            --accent-o: #f43f5e;
-            --shadow: rgba(0, 0, 0, 0.3);
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-            display: flex; justify-content: center; align-items: center;
-            min-height: 100vh; overflow: hidden;
-        }
-
-        .screen { display: none; width: 100vw; height: 100vh; max-width: 450px; flex-direction: column; padding: 20px; align-items: center; justify-content: center; }
-        .active-screen { display: flex; }
-
-        h1 { font-size: 1.8rem; text-shadow: 0 0 10px var(--accent-x); margin-bottom: 20px; }
-
-        .menu-group { width: 100%; display: flex; flex-direction: column; gap: 8px; }
-        .menu-btn {
-            width: 100%; padding: 14px;
-            background: var(--card-bg); color: white;
-            border: 2px solid #334155; border-radius: 15px;
-            font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.2s;
-        }
-        .menu-btn:hover { background: var(--accent-x); }
-
-        .room-list { width: 100%; max-height: 300px; overflow-y: auto; background: rgba(255,255,255,0.05); border-radius: 15px; padding: 10px; margin-bottom: 15px; }
-        .room-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: var(--card-bg); margin-bottom: 8px; border-radius: 10px; border-right: 4px solid var(--accent-x); }
-        .join-btn { background: var(--accent-x); color: white; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
-
-        .scoreboard { display: flex; gap: 20px; background: var(--card-bg); padding: 12px 25px; border-radius: 20px; margin-bottom: 15px; text-align: center; }
-        .score-item { display: flex; flex-direction: column; }
-        .score-val { font-size: 1.4rem; font-weight: bold; }
-        .score-label { font-size: 0.75rem; color: #94a3b8; }
-
-        .status-text { font-size: 1.1rem; font-weight: 500; height: 30px; margin-bottom: 10px; color: var(--accent-x); }
-        .board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 20px; }
-        .cell { width: 85px; height: 85px; background: var(--card-bg); border-radius: 15px; display: flex; justify-content: center; align-items: center; font-size: 2.3rem; font-weight: bold; cursor: pointer; box-shadow: 0 5px 10px var(--shadow); }
-        .cell.x { color: var(--accent-x); text-shadow: 0 0 10px var(--accent-x); }
-        .cell.o { color: var(--accent-o); text-shadow: 0 0 10px var(--accent-o); }
-
-        .controls { display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 15px; }
-        .level-switch { display: flex; background: var(--card-bg); border-radius: 50px; padding: 4px; gap: 2px; }
-        .lvl-btn { flex: 1; padding: 7px; border: none; background: transparent; color: #94a3b8; border-radius: 50px; cursor: pointer; font-size: 0.8rem; }
-        .lvl-btn.active { background: var(--accent-x); color: white; }
-        
-        .action-btns { display: flex; gap: 8px; }
-        .btn { flex: 1; padding: 10px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 0.9rem; }
-        .btn-reset { background: #334155; color: white; }
-        .btn-clear { background: #f43f5e; color: white; }
-
-        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.96); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; text-align: center; padding: 20px; }
+        body { font-family: Tahoma; text-align: center; padding-top: 50px; background-color: #f4f4f4; }
+        #status { color: orange; font-weight: bold; font-size: 20px; }
+        .box { width: 100px; height: 100px; border: 2px solid #333; display: inline-block; 
+               font-size: 50px; line-height: 100px; vertical-align: top; background: white; margin: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
-
-    <div id="main-menu" class="screen active-screen">
-        <h1>دوز پیشرفته</h1>
-        <div class="menu-group">
-            <button class="menu-btn" onclick="showScreen('lobby-screen')">بازی آنلاین</button>
-            <button class="menu-btn" onclick="startOffline('pvp')">دو نفره آفلاین</button>
-            <button class="menu-btn" onclick="startOffline('pvc')">بازی با ربات</button>
-        </div>
-    </div>
-
-    <div id="lobby-screen" class="screen">
-        <h1>لابی آنلاین</h1>
-        <div class="room-list" id="room-container">
-            <p id="lobby-status" style="text-align:center; color:#64748b;">در حال جستجوی اتاق‌ها...</p>
-        </div>
-        <button class="menu-btn" style="background: #10b981; margin-bottom: 5px;" onclick="createRoom()">+ ساخت اتاق جدید</button>
-        <button class="menu-btn" onclick="showScreen('main-menu')">برگشت</button>
-    </div>
-
-    <div id="game-screen" class="screen">
-        <div class="scoreboard">
-            <div class="score-item">
-                <span class="score-val" id="score-x">0</span>
-                <span class="score-label">X (امتیاز)</span>
-            </div>
-            <div style="border-left: 1px solid #334155;"></div>
-            <div class="score-item">
-                <span class="score-val" id="score-o">0</span>
-                <span class="score-label">O (امتیاز)</span>
-            </div>
-        </div>
-
-        <div class="status-text" id="status">نوبت X</div>
-
-        <div class="board" id="board">
-            <div class="cell" data-index="0" onclick="handleCellClick(event)"></div>
-            <div class="cell" data-index="1" onclick="handleCellClick(event)"></div>
-            <div class="cell" data-index="2" onclick="handleCellClick(event)"></div>
-            <div class="cell" data-index="3" onclick="handleCellClick(event)"></div>
-            <div class="cell" data-index="4" onclick="handleCellClick(event)"></div>
-            <div class="cell" data-index="5" onclick="handleCellClick(event)"></div>
-            <div class="cell" data-index="6" onclick="handleCellClick(event)"></div>
-            <div class="cell" data-index="7" onclick="handleCellClick(event)"></div>
-            <div class="cell" data-index="8" onclick="handleCellClick(event)"></div>
-        </div>
-
-        <div class="controls">
-            <div class="level-switch" id="level-container" style="display: none;">
-                <button class="lvl-btn active" onclick="setLevel('easy')">آسان</button>
-                <button class="lvl-btn" onclick="setLevel('medium')">متوسط</button>
-                <button class="lvl-btn" onclick="setLevel('hard')">سخت</button>
-            </div>
-
-            <div class="action-btns">
-                <button class="btn btn-reset" onclick="resetGame()">تکرار دست</button>
-                <button class="btn btn-clear" id="clear-score-btn" onclick="clearScores()">صفر امتیاز</button>
-                <button class="btn btn-reset" style="background: #475569;" onclick="exitToMenu()">خروج</button>
-            </div>
-            <p id="online-info" style="text-align: center; font-size: 0.8rem; color: #94a3b8; margin-top: 5px;"></p>
-        </div>
-    </div>
-
-    <div class="overlay" id="overlay">
-        <h1 id="winner-text" style="margin-bottom: 25px;"></h1>
-        <button class="menu-btn" id="overlay-action-btn" style="width: 200px;" onclick="resetGame()">شروع دست جدید</button>
+    <h1>تست دریافت حرکت از Pusher</h1>
+    <div id="status">در حال اتصال به شبکه...</div>
+    <br><br>
+    <div id="game-board">
+        <div class="box" id="box-0">-</div>
+        <div class="box" id="box-1">-</div>
+        <div class="box" id="box-2">-</div>
     </div>
 
     <script>
-        const PUSHER_KEY = '6efd3e505930fedf4fb9';
-        const CLUSTER = 'eu';
-        
-        // تنظیمات Pusher
-        let pusher = new Pusher(PUSHER_KEY, { 
-            cluster: CLUSTER, 
-            forceTLS: true,
-            userAuthentication: { endpoint: "/unused" } // برای جلوگیری از خطای آتنتیکیشن در حالت کلاینت
+        // وارد کردن اطلاعات اختصاصی تو
+        const pusher = new Pusher('d4eec3a1f4125ea6f09b', {
+            cluster: 'eu'
         });
 
-        let gameChannel = null;
-        // تغییر نام کانال لابی برای اجازه دادن به Client Events
-        let lobbyChannel = pusher.subscribe('private-lobby');
+        // وصل شدن به کانال بازی
+        const channel = pusher.subscribe('my-game');
 
-        let board = ["", "", "", "", "", "", "", "", ""];
-        let currentPlayer = "X";
-        let gameActive = true;
-        let mode = "pvp";
-        let difficulty = "easy";
-        let scores = { X: 0, O: 0 };
-        let mySymbol = null;
-        let roomID = null;
-
-        const winningConditions = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-
-        function showScreen(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
-            document.getElementById(id).classList.add('active-screen');
-        }
-
-        function exitToMenu() { location.reload(); }
-
-        function clearScores() {
-            scores = { X: 0, O: 0 };
-            document.getElementById('score-x').innerText = "0";
-            document.getElementById('score-o').innerText = "0";
-            resetGame();
-        }
-
-        function startOffline(newMode) {
-            mode = newMode;
-            document.getElementById('level-container').style.display = (mode === 'pvc') ? 'flex' : 'none';
-            document.getElementById('clear-score-btn').style.display = 'block';
-            document.getElementById('online-info').innerText = "";
-            showScreen('game-screen');
-            clearScores();
-        }
-
-        // بخش دریافت لیست اتاق‌ها (گوش دادن به رویداد کلاینت)
-        lobbyChannel.bind('client-new-room', (data) => {
-            const container = document.getElementById('room-container');
-            const status = document.getElementById('lobby-status');
-            if(status) status.remove();
-            
-            // جلوگیری از نمایش اتاق تکراری
-            if(document.getElementById('room-' + data.id)) return;
-
-            const div = document.createElement('div');
-            div.id = 'room-' + data.id;
-            div.className = 'room-item';
-            div.innerHTML = `<span>اتاق ${data.id}</span> <button class="join-btn" onclick="joinRoom(${data.id})">ورود</button>`;
-            container.appendChild(div);
+        // وقتی متصل شد متن را سبز کن
+        pusher.connection.bind('connected', () => {
+            document.getElementById('status').innerText = "متصل شد! حالا از سایت Pusher حرکت بفرست...";
+            document.getElementById('status').style.color = "green";
         });
 
-        function createRoom() {
-            roomID = Math.floor(1000 + Math.random() * 9000);
-            mode = 'online'; mySymbol = 'X';
-            initOnline(roomID);
-            
-            // ارسال سیگنال ساخت اتاق به بقیه (بعد از نیم ثانیه برای اطمینان از اتصال)
-            setTimeout(() => {
-                lobbyChannel.trigger('client-new-room', { id: roomID });
-            }, 500);
-
-            document.getElementById('clear-score-btn').style.display = 'none';
-            document.getElementById('online-info').innerText = "کد اتاق: " + roomID + " | در انتظار حریف...";
-            showScreen('game-screen');
-        }
-
-        function joinRoom(id) {
-            roomID = id;
-            mode = 'online'; mySymbol = 'O';
-            initOnline(roomID);
-            document.getElementById('clear-score-btn').style.display = 'none';
-            document.getElementById('online-info').innerText = "متصل به اتاق " + id;
-            showScreen('game-screen');
-            resetGame();
-        }
-
-        function initOnline(id) {
-            // استفاده از پیشوند private برای کانال بازی
-            gameChannel = pusher.subscribe('private-game-' + id);
-            gameChannel.bind('client-move', (data) => {
-                if(data.player !== mySymbol) makeMove(data.index, data.player);
-            });
-        }
-
-        function handleCellClick(e) {
-            const index = e.target.getAttribute('data-index');
-            if (board[index] !== "" || !gameActive) return;
-            if (mode === 'online' && currentPlayer !== mySymbol) return;
-
-            makeMove(index, currentPlayer);
-
-            if (mode === 'online') {
-                gameChannel.trigger('client-move', { index: index, player: mySymbol });
-            } else if (gameActive && mode === "pvc" && currentPlayer === "O") {
-                setTimeout(robotMove, 500);
+        // گوش دادن به حرکت حریف
+        channel.bind('move-event', function(data) {
+            const boxId = "box-" + data.index;
+            const element = document.getElementById(boxId);
+            if(element) {
+                element.innerText = "X";
+                element.style.color = "red";
+                alert("پیام رسید! حریف خانه شماره " + data.index + " را انتخاب کرد.");
             }
-        }
-
-        function makeMove(index, player) {
-            board[index] = player;
-            const cell = document.querySelectorAll('.cell')[index];
-            cell.innerText = player;
-            cell.classList.add(player.toLowerCase());
-            
-            checkResult();
-            if (gameActive) {
-                currentPlayer = currentPlayer === "X" ? "O" : "X";
-                const status = document.getElementById('status');
-                status.innerText = `نوبت بازیکن ${currentPlayer}`;
-                status.style.color = currentPlayer === "X" ? "var(--accent-x)" : "var(--accent-o)";
-            }
-        }
-
-        // منطق هوش مصنوعی و برنده (بدون تغییر)
-        function robotMove() {
-            let move = (difficulty === "easy") ? getRandomMove() : 
-                       (difficulty === "medium" && Math.random() > 0.5) ? getRandomMove() : getBestMove();
-            if (move !== null) makeMove(move, "O");
-        }
-
-        function getRandomMove() {
-            let avail = board.map((v, i) => v === "" ? i : null).filter(v => v !== null);
-            return avail[Math.floor(Math.random() * avail.length)];
-        }
-
-        function getBestMove() {
-            let bestScore = -Infinity, move = null;
-            for (let i = 0; i < 9; i++) {
-                if (board[i] === "") {
-                    board[i] = "O";
-                    let score = minimax(board, 0, false);
-                    board[i] = "";
-                    if (score > bestScore) { bestScore = score; move = i; }
-                }
-            }
-            return move;
-        }
-
-        function minimax(currBoard, depth, isMax) {
-            let res = checkWinnerScore();
-            if (res !== null) return res === "O" ? 10 : res === "X" ? -10 : 0;
-            if (isMax) {
-                let best = -Infinity;
-                for (let i=0; i<9; i++) if(currBoard[i]===""){ currBoard[i]="O"; best=Math.max(best, minimax(currBoard,depth+1,false)); currBoard[i]=""; }
-                return best;
-            } else {
-                let best = Infinity;
-                for (let i=0; i<9; i++) if(currBoard[i]===""){ currBoard[i]="X"; best=Math.min(best, minimax(currBoard,depth+1,true)); currBoard[i]=""; }
-                return best;
-            }
-        }
-
-        function checkWinnerScore() {
-            for (let cond of winningConditions) {
-                if (board[cond[0]] && board[cond[0]] === board[cond[1]] && board[cond[0]] === board[cond[2]]) return board[cond[0]];
-            }
-            return board.includes("") ? null : "tie";
-        }
-
-        function checkResult() {
-            let res = checkWinnerScore();
-            if (res === "tie") endGame("بازی مساوی شد!");
-            else if (res) {
-                scores[res]++;
-                document.getElementById('score-x').innerText = scores.X;
-                document.getElementById('score-o').innerText = scores.O;
-                
-                if (mode === 'online' && (scores.X === 3 || scores.O === 3)) {
-                    endGame(`پایان بازی! برنده نهایی: بازیکن ${res}`, true);
-                } else {
-                    endGame(`بازیکن ${res} این دست را برد!`);
-                }
-            }
-        }
-
-        function endGame(msg, isFinal = false) {
-            gameActive = false;
-            document.getElementById('winner-text').innerText = msg;
-            const actionBtn = document.getElementById('overlay-action-btn');
-            
-            if (isFinal) {
-                actionBtn.innerText = "بازگشت به لابی";
-                actionBtn.onclick = () => { location.reload(); };
-            } else {
-                actionBtn.innerText = "شروع دست جدید";
-                actionBtn.onclick = resetGame;
-            }
-            document.getElementById('overlay').style.display = 'flex';
-        }
-
-        function resetGame() {
-            board = ["", "", "", "", "", "", "", "", ""];
-            gameActive = true; currentPlayer = "X";
-            document.getElementById('overlay').style.display = 'none';
-            document.getElementById('status').innerText = "نوبت X";
-            document.querySelectorAll('.cell').forEach(c => { c.innerText = ""; c.classList.remove('x', 'o'); });
-        }
-
-        function setLevel(lvl) {
-            difficulty = lvl;
-            document.querySelectorAll('.lvl-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.innerText.includes(lvl === 'easy' ? 'آسان' : lvl === 'medium' ? 'متوسط' : 'سخت'));
-            });
-            clearScores();
-        }
+        });
     </script>
 </body>
 </html>
