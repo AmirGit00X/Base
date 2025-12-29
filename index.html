@@ -2,50 +2,82 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>تست بازی دوز</title>
-    <script src="https://js.pusher.com/8.0/pusher.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دوز آنلاین فایربیس</title>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
     <style>
-        body { font-family: Tahoma; text-align: center; padding-top: 50px; background-color: #f4f4f4; }
-        #status { color: orange; font-weight: bold; font-size: 20px; }
-        .box { width: 100px; height: 100px; border: 2px solid #333; display: inline-block; 
-               font-size: 50px; line-height: 100px; vertical-align: top; background: white; margin: 5px; cursor: pointer; }
+        body { font-family: Tahoma; text-align: center; background-color: #f7f7f7; padding-top: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); width: 280px; margin: 20px auto; gap: 10px; }
+        .box { width: 85px; height: 85px; background: white; border: 2px solid #007bff; font-size: 40px; 
+               line-height: 85px; cursor: pointer; border-radius: 12px; transition: 0.3s; }
+        .box:hover { background-color: #e7f3ff; }
+        #info { margin-top: 20px; font-weight: bold; color: #333; }
+        button { padding: 10px 20px; font-family: Tahoma; cursor: pointer; background: #dc3545; color: white; border: none; border-radius: 5px; }
     </style>
 </head>
 <body>
-    <h1>تست دریافت حرکت از Pusher</h1>
-    <div id="status">در حال اتصال به شبکه...</div>
-    <br><br>
-    <div id="game-board">
-        <div class="box" id="box-0">-</div>
-        <div class="box" id="box-1">-</div>
-        <div class="box" id="box-2">-</div>
+    <h2>بازی دوز آنلاین ⭕❌</h2>
+    <div id="info">در حال اتصال به دیتابیس...</div>
+    
+    <div class="grid" id="board">
+        <div class="box" onclick="play(0)" id="b0"></div>
+        <div class="box" onclick="play(1)" id="b1"></div>
+        <div class="box" onclick="play(2)" id="b2"></div>
+        <div class="box" onclick="play(3)" id="b3"></div>
+        <div class="box" onclick="play(4)" id="b4"></div>
+        <div class="box" onclick="play(5)" id="b5"></div>
+        <div class="box" onclick="play(6)" id="b6"></div>
+        <div class="box" onclick="play(7)" id="b7"></div>
+        <div class="box" onclick="play(8)" id="b8"></div>
     </div>
+    
+    <button onclick="resetGame()">پاک کردن کل بازی</button>
 
     <script>
-        // وارد کردن اطلاعات اختصاصی تو
-        const pusher = new Pusher('d4eec3a1f4125ea6f09b', {
-            cluster: 'eu'
-        });
+        // ۱. اطلاعات اختصاصی پروژه تو (تنظیم شده)
+        const firebaseConfig = {
+            apiKey: "AIzaSyDTZ68yTUyrpoKJdVRQzY7ZJ2mUUrWv-PM",
+            authDomain: "my-online-game-91998.firebaseapp.com",
+            databaseURL: "https://my-online-game-91998-default-rtdb.europe-west1.firebasedatabase.app/",
+            projectId: "my-online-game-91998",
+            storageBucket: "my-online-game-91998.firebasestorage.app",
+            messagingSenderId: "656716202334",
+            appId: "1:656716202334:web:1ded52f8ac914b2b61cfcf"
+        };
 
-        // وصل شدن به کانال بازی
-        const channel = pusher.subscribe('my-game');
+        // شروع به کار فایربیس
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-        // وقتی متصل شد متن را سبز کن
-        pusher.connection.bind('connected', () => {
-            document.getElementById('status').innerText = "متصل شد! حالا از سایت Pusher حرکت بفرست...";
-            document.getElementById('status').style.color = "green";
-        });
-
-        // گوش دادن به حرکت حریف
-        channel.bind('move-event', function(data) {
-            const boxId = "box-" + data.index;
-            const element = document.getElementById(boxId);
-            if(element) {
-                element.innerText = "X";
-                element.style.color = "red";
-                alert("پیام رسید! حریف خانه شماره " + data.index + " را انتخاب کرد.");
+        // ۲. گوش دادن به تغییرات زنده دیتابیس
+        db.ref('tictactoe/board').on('value', (snapshot) => {
+            const boardData = snapshot.val() || {};
+            document.getElementById('info').innerText = "متصل شد! آماده بازی.";
+            
+            for (let i = 0; i < 9; i++) {
+                const value = boardData[i] || "";
+                const el = document.getElementById('b' + i);
+                el.innerText = value;
+                el.style.color = (value === 'X') ? 'red' : 'blue';
             }
         });
+
+        // ۳. تابع ارسال حرکت
+        function play(index) {
+            const el = document.getElementById('b' + index);
+            if (el.innerText === "") {
+                // ارسال علامت به دیتابیس
+                db.ref('tictactoe/board/' + index).set('X'); 
+            }
+        }
+
+        // ۴. ریست کردن دیتابیس
+        function resetGame() {
+            if(confirm("آیا مطمئنی که می‌خواهی بازی را پاک کنی؟")) {
+                db.ref('tictactoe/board').remove();
+            }
+        }
     </script>
 </body>
 </html>
