@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>دوز حرفه‌ای آنلاین - نسخه امنیتی</title>
+    <title>دوز حرفه‌ای آنلاین - نسخه نهایی</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
@@ -26,7 +26,6 @@
         .room-list { width: 100%; flex-grow: 1; overflow-y: auto; background: rgba(255,255,255,0.05); border-radius: 15px; padding: 10px; margin-top: 10px; border: 1px solid #334155; }
         .room-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--card-bg); margin-bottom: 10px; border-radius: 15px; border: 1px solid #334155; }
         
-        /* دکمه ورود زیبا */
         .join-btn { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; border: none; padding: 8px 18px; border-radius: 10px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); }
 
         .stats-box { background: var(--card-bg); width: 100%; padding: 15px; border-radius: 15px; margin-bottom: 15px; font-size: 0.85rem; line-height: 1.8; border: 1px solid var(--accent-x); }
@@ -157,21 +156,19 @@
             if (currentUser) loginSuccess(); else showScreen('auth-screen');
         });
 
-        // --- سیستم احراز هویت و Session ---
         function handleAuth(type) {
             const user = document.getElementById('auth-user').value.trim().toLowerCase();
             const pass = document.getElementById('auth-pass').value.trim();
             const nick = document.getElementById('auth-nick').value.trim();
 
-            // اعتبارسنجی
             const userRegex = /^[a-zA-Z0-9]{3,}$/;
-            if (!userRegex.test(user)) return alert("نام کاربری باید حداقل ۳ کاراکتر و فقط حروف/اعداد انگلیسی باشد.");
-            if (pass.length < 4) return alert("رمز عبور باید حداقل ۴ کاراکتر باشد.");
+            if (!userRegex.test(user)) return alert("نام کاربری: حداقل ۳ حرف/عدد انگلیسی.");
+            if (pass.length < 4) return alert("رمز عبور: حداقل ۴ کاراکتر.");
 
             db.ref('users/' + user).once('value', snap => {
                 const data = snap.val();
                 if (type === 'register') {
-                    if (data) return alert("این نام کاربری قبلا گرفته شده");
+                    if (data) return alert("نام کاربری تکراری است.");
                     const newUser = { username: user, password: pass, nickname: nick || user, wins:0, losses:0, draws:0, sessionId: mySessionId };
                     db.ref('users/' + user).set(newUser).then(() => {
                         currentUser = newUser; loginSuccess();
@@ -181,7 +178,7 @@
                         currentUser = data;
                         db.ref('users/' + user).update({ sessionId: mySessionId });
                         loginSuccess();
-                    } else alert("نام کاربری یا رمز اشتباه");
+                    } else alert("اطلاعات ورود اشتباه است.");
                 }
             });
         }
@@ -190,10 +187,9 @@
             localStorage.setItem('tt_user_data', JSON.stringify(currentUser));
             document.getElementById('welcome-text').innerText = "خوش آمدی " + currentUser.nickname;
             
-            // گوش دادن به Session (جلوگیری از ورود همزمان)
             db.ref('users/' + currentUser.username + '/sessionId').on('value', snap => {
                 if (snap.val() && snap.val() !== mySessionId) {
-                    alert("اکانت شما در دستگاه دیگری باز شد.");
+                    alert("این اکانت در دستگاه دیگری باز شد.");
                     logout();
                 }
             });
@@ -210,7 +206,6 @@
                 const total = d.wins + d.losses + d.draws;
                 const rate = total === 0 ? 0 : ((d.wins / total) * 100).toFixed(1);
                 document.getElementById('user-stats').innerHTML = `
-                    <b>نام مستعار:</b> ${d.nickname} <br>
                     <b>برد:</b> ${d.wins} | <b>باخت:</b> ${d.losses} | <b>مساوی:</b> ${d.draws} <br>
                     <b>کل بازی‌ها:</b> ${total} | <b>درصد پیروزی:</b> ${rate}%
                 `;
@@ -228,17 +223,16 @@
         }
 
         function changeNickname() {
-            const n = prompt("نام مستعار جدید را وارد کنید:");
+            const n = prompt("نام جدید:");
             if (n) db.ref('users/' + currentUser.username).update({ nickname: n });
         }
 
         function deleteAccount() {
-            if (confirm("آیا از حذف اکانت و تمام سوابق اطمینان دارید؟")) {
+            if (confirm("حذف کامل اکانت؟")) {
                 db.ref('users/' + currentUser.username).remove().then(logout);
             }
         }
 
-        // --- بخش آنلاین ---
         function listenToRooms() {
             db.ref('rooms').on('value', snapshot => {
                 const rooms = snapshot.val();
@@ -249,7 +243,7 @@
                     if (rooms[id].status === "waiting") {
                         const div = document.createElement('div');
                         div.className = 'room-item';
-                        div.innerHTML = `<span>اتاق ${id} (${rooms[id].creator})</span> 
+                        div.innerHTML = `<span>اتاق ${id}</span> 
                                          <button class="join-btn" onclick="joinRoom('${id}')">ورود</button>`;
                         container.appendChild(div);
                     }
@@ -268,13 +262,10 @@
                 scores: {X: 0, O: 0}
             };
             db.ref('rooms/' + id).set(roomData);
-            
-            // اگر سازنده قطع شد، اتاق حذف شود و برای او باخت ثبت شود (اگر بازی شروع شده بود)
             db.ref('rooms/' + id).onDisconnect().remove();
             setupOnlineListener(id);
             showScreen('game-screen');
             document.getElementById('bot-config').style.display = 'none';
-            document.getElementById('reset-local-btn').style.display = 'none';
         }
 
         function joinRoom(id) {
@@ -285,11 +276,10 @@
                 status: "playing" 
             });
 
-            // ثبت شکست در صورت قطع اتصال وسط بازی
+            // جریمه قطع اتصال
             const userRef = db.ref('users/' + currentUser.username + '/losses');
             userRef.once('value', s => {
                 db.ref('rooms/' + id).onDisconnect().update({ playerO: "OFFLINE" });
-                // این منطق پیچیده فایربیس برای ثبت باخت هنگام آفلاین شدن است:
                 db.ref('users/' + currentUser.username + '/losses').onDisconnect().set(s.val() + 1);
             });
 
@@ -301,24 +291,22 @@
             db.ref('rooms/' + id).on('value', snapshot => {
                 const data = snapshot.val();
                 if (!data) {
-                    if (gameActive) alert("اتاق بسته شد.");
+                    if (gameActive) alert("بازی لغو شد.");
                     exitGame(); return;
                 }
                 
                 if (data.status === "playing") {
                     if ((mySymbol === "X" && data.playerO === "OFFLINE") || (mySymbol === "O" && data.playerX === "OFFLINE")) {
-                        showWinnerOverlay("حریف آفلاین شد! برد برای شما.");
+                        showWinnerOverlay("حریف خارج شد! شما برنده شدید.");
                         if (gameActive) syncOnlineResult('win');
                         gameActive = false;
-                        db.ref('users/' + currentUser.username + '/losses').onDisconnect().cancel(); // لغو جریمه چون حریف رفته
+                        db.ref('users/' + currentUser.username + '/losses').onDisconnect().cancel();
                     }
                 }
 
                 board = data.board || Array(9).fill("");
                 turn = data.turn;
                 renderBoard();
-                document.getElementById('label-x').innerText = data.playerXNick;
-                document.getElementById('label-o').innerText = data.playerONick || "در انتظار...";
                 document.getElementById('score-x').innerText = data.scores.X;
                 document.getElementById('score-o').innerText = data.scores.O;
                 document.getElementById('status').innerText = (data.status === "waiting") ? "کد: " + id : (turn === mySymbol ? "نوبت شما" : "نوبت حریف");
@@ -326,33 +314,13 @@
             });
         }
 
-        // --- بخش آفلاین و ربات (بدون تغییر) ---
         function showLocalConfig(mode) {
             isOnline = false; gameMode = mode; gameActive = true;
             board = Array(9).fill(""); turn = "X";
             localScores = {X: 0, O: 0};
-            document.getElementById('score-x').innerText = "0";
-            document.getElementById('score-o').innerText = "0";
-            document.getElementById('label-x').innerText = currentUser.nickname;
-            document.getElementById('label-o').innerText = (mode === 'pvc') ? "ربات" : "بازیکن ۲";
             document.getElementById('bot-config').style.display = (mode === 'pvc') ? 'block' : 'none';
-            document.getElementById('reset-local-btn').style.display = 'block';
-            document.getElementById('status').innerText = "نوبت X";
             renderBoard();
             showScreen('game-screen');
-        }
-
-        function setDifficulty(lvl, btn) {
-            difficulty = lvl;
-            document.querySelectorAll('.lvl-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-        }
-
-        function resetLocalScores() {
-            localScores = {X: 0, O: 0};
-            document.getElementById('score-x').innerText = "0";
-            document.getElementById('score-o').innerText = "0";
-            resetMatch();
         }
 
         function handleCellClick(i) {
@@ -366,20 +334,90 @@
                 renderBoard();
                 if(!checkWinnerLogic()) {
                     turn = (turn === "X" ? "O" : "X");
-                    document.getElementById('status').innerText = "نوبت " + turn;
                     if (gameMode === "pvc" && turn === "O") setTimeout(botPlay, 500);
                 }
             }
         }
 
-        function botPlay() {
-            let move;
-            if (difficulty === "easy") {
-                const empty = board.map((v, i) => v === "" ? i : null).filter(v => v !== null);
-                move = empty[Math.floor(Math.random() * empty.length)];
-            } else if (difficulty === "med") {
-                move = Math.random() > 0.5 ? minimax(board, "O").index : board.indexOf("");
-            } else {
-                move = minimax(board, "O").index;
+        function renderBoard() {
+            const cells = document.querySelectorAll('.cell');
+            board.forEach((val, i) => {
+                cells[i].innerText = val;
+                cells[i].className = "cell " + (val ? val.toLowerCase() : "");
+            });
+        }
+
+        function checkWinnerLogic(onlineScores) {
+            const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+            let winner = null;
+            for (let c of wins) {
+                if (board[c[0]] && board[c[0]] === board[c[1]] && board[c[0]] === board[c[2]]) winner = board[c[0]];
             }
-    
+
+            if (winner || !board.includes("")) {
+                gameActive = false;
+                db.ref('users/' + currentUser.username + '/losses').onDisconnect().cancel();
+                
+                const resultText = winner ? (winner === "X" ? "X برنده شد!" : "O برنده شد!") : "مساوی!";
+                showWinnerOverlay(resultText);
+
+                if (isOnline) {
+                    if (mySymbol === "X" && winner) {
+                        let s = onlineScores; s[winner]++;
+                        db.ref('rooms/' + currentRoomId + '/scores').update(s);
+                    }
+                    if (winner) syncOnlineResult(winner === mySymbol ? 'win' : 'loss');
+                    else syncOnlineResult('draw');
+                } else {
+                    if (winner) localScores[winner]++;
+                    document.getElementById('score-x').innerText = localScores.X;
+                    document.getElementById('score-o').innerText = localScores.O;
+                }
+                return true;
+            }
+            return false;
+        }
+
+        function syncOnlineResult(type) {
+            const ref = db.ref('users/' + currentUser.username);
+            ref.once('value', snap => {
+                const d = snap.val();
+                if (type === 'win') ref.update({ wins: d.wins + 1 });
+                else if (type === 'loss') ref.update({ losses: d.losses + 1 });
+                else if (type === 'draw') ref.update({ draws: d.draws + 1 });
+            });
+        }
+
+        function showWinnerOverlay(txt) {
+            document.getElementById('winner-text').innerText = txt;
+            document.getElementById('overlay').style.display = 'flex';
+        }
+
+        function resetMatch() {
+            board = Array(9).fill(""); turn = "X"; gameActive = true;
+            document.getElementById('overlay').style.display = 'none';
+            if (isOnline) {
+                if (mySymbol === "X") db.ref('rooms/' + currentRoomId).update({ board: board, turn: "X" });
+            } else renderBoard();
+        }
+
+        function exitGame() {
+            gameActive = false;
+            db.ref('users/' + currentUser.username + '/losses').onDisconnect().cancel();
+            if (isOnline && mySymbol === "X") db.ref('rooms/' + currentRoomId).remove();
+            location.reload();
+        }
+
+        function botPlay() {
+            const empty = board.map((v, i) => v === "" ? i : null).filter(v => v !== null);
+            const move = empty[Math.floor(Math.random() * empty.length)];
+            if (move !== undefined) handleCellClick(move);
+        }
+
+        function setDifficulty(lvl, btn) {
+            document.querySelectorAll('.lvl-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+    </script>
+</body>
+</html>
