@@ -3,41 +3,284 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>چت روم جهانی</title>
-    <link rel="stylesheet" href="style.css">
+    <title>چت‌روم گرافیکی جهانی</title>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;500;800&display=swap');
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Vazirmatn', sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #1e1e2f 0%, #111119 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            overflow: hidden;
+        }
+
+        /* صفحه ورود */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: 0.5s;
+        }
+
+        .login-box {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 40px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .login-box h2 { font-weight: 800; color: #00d2ff; }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 15px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 16px;
+            outline: none;
+            text-align: center;
+        }
+
+        button {
+            background: linear-gradient(90deg, #00d2ff 0%, #3a7bd5 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+            width: 100%;
+        }
+
+        button:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(0, 210, 255, 0.5); }
+
+        /* باکس چت */
+        .chat-app {
+            width: 95%;
+            max-width: 600px;
+            height: 90vh;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.4);
+            position: relative;
+        }
+
+        header {
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        header h1 { margin: 0; font-size: 20px; color: #00d2ff; }
+
+        .messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* استایل پیام‌ها */
+        .msg {
+            max-width: 75%;
+            padding: 12px 18px;
+            border-radius: 20px;
+            position: relative;
+            line-height: 1.6;
+            animation: slideUp 0.4s ease forwards;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .sent {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+            color: white;
+            border-bottom-left-radius: 2px;
+        }
+
+        .received {
+            align-self: flex-start;
+            background: rgba(255, 255, 255, 0.1);
+            color: #eee;
+            border-bottom-right-radius: 2px;
+        }
+
+        .sender-name {
+            display: block;
+            font-size: 11px;
+            font-weight: bold;
+            margin-bottom: 4px;
+            opacity: 0.8;
+        }
+
+        .footer {
+            padding: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        #message-input {
+            flex: 1;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            color: white;
+            outline: none;
+        }
+
+        #send-btn { width: auto; padding: 0 25px; }
+
+        .hidden { display: none !important; }
+
+    </style>
 </head>
 <body>
 
-    <div id="login-overlay" class="overlay">
+    <div id="login-screen" class="overlay">
         <div class="login-box">
-            <h2>خوش آمدید</h2>
-            <p>لطفاً نام خود را برای ورود به چت وارد کنید:</p>
-            <input type="text" id="username-input" placeholder="نام شما...">
-            <button onclick="startChat()">ورود به چت</button>
+            <h2>ورود به چت جهانی</h2>
+            <input type="text" id="name-input" placeholder="نام خود را بنویسید...">
+            <button onclick="initUser()">تایید و ورود</button>
         </div>
     </div>
 
-    <div class="chat-container">
+    <div class="chat-app">
         <header>
-            <div class="status-dot"></div>
-            <h1>چت روم جهانی</h1>
-            <button class="exit-btn" onclick="logout()">تغییر نام</button>
+            <h1>Global Chat 🌐</h1>
+            <span id="user-display" style="font-size: 12px; opacity: 0.6;"></span>
+            <button onclick="changeName()" style="width: auto; padding: 5px 15px; font-size: 10px; background: #ff4757;">تغییر نام</button>
         </header>
 
-        <div id="chat-messages" class="messages-area">
-            </div>
+        <div id="chat-messages" class="messages"></div>
 
-        <form id="chat-form" onsubmit="sendMessage(event)">
-            <input type="text" id="msg-input" placeholder="پیامی بنویسید..." autocomplete="off">
-            <button type="submit">
-                <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
-            </button>
-        </form>
+        <div class="footer">
+            <input type="text" id="message-input" placeholder="چیزی بنویسید..." onkeypress="handleEnter(event)">
+            <button id="send-btn" onclick="sendMsg()">ارسال</button>
+        </div>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <script src="app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <script>
+        // اطلاعات فایربیس شما
+        const firebaseConfig = {
+            apiKey: "AIzaSyDTZ68yTUyrpoKJdVRQzY7ZJ2mUUrWv-PM",
+            databaseURL: "https://my-online-game-91998-default-rtdb.europe-west1.firebasedatabase.app/"
+        };
+
+        // مقداردهی اولیه
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        let username = localStorage.getItem('chat_name');
+
+        // چک کردن نام
+        if (username) {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('user-display').innerText = username;
+            listenForMessages();
+        }
+
+        function initUser() {
+            const input = document.getElementById('name-input').value.trim();
+            if (input.length < 2) return alert("نام خیلی کوتاه است");
+            username = input;
+            localStorage.setItem('chat_name', username);
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('user-display').innerText = username;
+            listenForMessages();
+        }
+
+        function handleEnter(e) {
+            if (e.key === 'Enter') sendMsg();
+        }
+
+        function sendMsg() {
+            const msgInput = document.getElementById('message-input');
+            const text = msgInput.value.trim();
+
+            if (text !== "") {
+                database.ref('messages').push({
+                    name: username,
+                    message: text,
+                    time: Date.now()
+                }).then(() => {
+                    msgInput.value = ""; // پاک کردن اینپوت بعد ارسال موفق
+                }).catch(err => {
+                    alert("خطا در ارسال: " + err.message);
+                });
+            }
+        }
+
+        function listenForMessages() {
+            // دریافت پیام‌ها به صورت آنی
+            database.ref('messages').limitToLast(50).on('value', (snapshot) => {
+                const container = document.getElementById('chat-messages');
+                container.innerHTML = "";
+                
+                snapshot.forEach((child) => {
+                    const data = child.val();
+                    const isMe = data.name === username;
+                    
+                    const msgDiv = document.createElement('div');
+                    msgDiv.className = `msg ${isMe ? 'sent' : 'received'}`;
+                    
+                    msgDiv.innerHTML = `
+                        <span class="sender-name">${isMe ? 'شما' : data.name}</span>
+                        <div class="text-content">${data.message}</div>
+                    `;
+                    
+                    container.appendChild(msgDiv);
+                });
+                
+                // اسکرول خودکار به آخر
+                container.scrollTop = container.scrollHeight;
+            });
+        }
+
+        function changeName() {
+            localStorage.removeItem('chat_name');
+            location.reload();
+        }
+    </script>
 </body>
 </html>
 
