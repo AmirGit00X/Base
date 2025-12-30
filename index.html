@@ -2,8 +2,8 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>چت‌روم گرافیکی جهانی</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>چت‌روم جهانی مدرن</title>
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;500;800&display=swap');
@@ -11,120 +11,100 @@
         * {
             box-sizing: border-box;
             font-family: 'Vazirmatn', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: #111119;
+            color: white;
+            overflow: hidden; /* جلوگیری از اسکرول کل صفحه در موبایل */
         }
 
         body {
-            margin: 0;
-            padding: 0;
-            background: linear-gradient(135deg, #1e1e2f 0%, #111119 100%);
-            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            color: white;
-            overflow: hidden;
         }
 
-        /* صفحه ورود */
+        /* صفحه ورود تمام‌صفحه */
         .overlay {
             position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(10px);
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 15, 25, 0.95);
+            backdrop-filter: blur(15px);
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 1000;
-            transition: 0.5s;
         }
 
         .login-box {
             background: rgba(255, 255, 255, 0.05);
-            padding: 40px;
-            border-radius: 30px;
+            padding: 30px;
+            border-radius: 25px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             text-align: center;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-            width: 90%;
-            max-width: 400px;
+            width: 85%;
+            max-width: 350px;
         }
 
-        .login-box h2 { font-weight: 800; color: #00d2ff; }
-
-        input[type="text"] {
-            width: 100%;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 15px;
-            border: none;
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            font-size: 16px;
-            outline: none;
-            text-align: center;
-        }
-
-        button {
-            background: linear-gradient(90deg, #00d2ff 0%, #3a7bd5 100%);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 15px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.3s;
-            width: 100%;
-        }
-
-        button:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(0, 210, 255, 0.5); }
-
-        /* باکس چت */
+        /* اپلیکیشن چت تمام‌صفحه در موبایل */
         .chat-app {
-            width: 95%;
-            max-width: 600px;
-            height: 90vh;
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(20px);
-            border-radius: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 100%;
+            height: 100%; /* تمام صفحه */
+            max-width: 600px; /* محدودیت عرض در دسکتاپ */
+            background: rgba(255, 255, 255, 0.02);
             display: flex;
             flex-direction: column;
-            box-shadow: 0 40px 100px rgba(0,0,0,0.4);
             position: relative;
+        }
+
+        @media (min-height: 700px) and (min-width: 600px) {
+            .chat-app {
+                height: 95vh;
+                border-radius: 30px;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            }
         }
 
         header {
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.05);
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.07);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            z-index: 10;
         }
 
-        header h1 { margin: 0; font-size: 20px; color: #00d2ff; }
+        header h1 { margin: 0; font-size: 18px; color: #00d2ff; }
 
         .messages {
             flex: 1;
-            padding: 20px;
+            padding: 15px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 12px;
+            background: url('https://www.transparenttextures.com/patterns/cubes.png'); /* بافت ملایم پس‌زمینه */
         }
 
-        /* استایل پیام‌ها */
         .msg {
-            max-width: 75%;
-            padding: 12px 18px;
-            border-radius: 20px;
-            position: relative;
-            line-height: 1.6;
-            animation: slideUp 0.4s ease forwards;
+            max-width: 85%;
+            padding: 10px 15px;
+            border-radius: 18px;
+            font-size: 15px;
+            line-height: 1.5;
+            word-wrap: break-word;
+            animation: slideUp 0.3s ease-out forwards;
         }
 
         @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
+            from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
@@ -132,68 +112,89 @@
             align-self: flex-end;
             background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
             color: white;
-            border-bottom-left-radius: 2px;
+            border-bottom-left-radius: 4px;
         }
 
         .received {
             align-self: flex-start;
-            background: rgba(255, 255, 255, 0.1);
-            color: #eee;
-            border-bottom-right-radius: 2px;
+            background: rgba(255, 255, 255, 0.12);
+            color: #ffffff;
+            border-bottom-right-radius: 4px;
         }
 
         .sender-name {
             display: block;
-            font-size: 11px;
-            font-weight: bold;
-            margin-bottom: 4px;
-            opacity: 0.8;
+            font-size: 10px;
+            font-weight: 800;
+            margin-bottom: 3px;
+            color: #00d2ff;
         }
+        .sent .sender-name { color: #e0faff; }
 
+        /* بخش فوتر استاندارد موبایل */
         .footer {
-            padding: 20px;
+            padding: 12px;
+            background: #1a1a25;
             display: flex;
+            align-items: center;
             gap: 10px;
+            padding-bottom: env(safe-area-inset-bottom); /* رعایت حاشیه دکمه هوم در آیفون */
         }
 
-        #message-input {
+        input[type="text"] {
             flex: 1;
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.05);
+            height: 50px; /* ارتفاع استاندارد لمسی */
+            padding: 0 20px;
+            border-radius: 25px;
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.05);
             color: white;
+            font-size: 16px; /* جلوگیری از زوم خودکار در iOS */
             outline: none;
         }
 
-        #send-btn { width: auto; padding: 0 25px; }
+        #send-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #00d2ff;
+            flex-shrink: 0;
+        }
 
         .hidden { display: none !important; }
 
+        /* اسکرول‌بار زیبا */
+        .messages::-webkit-scrollbar { width: 4px; }
+        .messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
     </style>
 </head>
 <body>
 
     <div id="login-screen" class="overlay">
         <div class="login-box">
-            <h2>ورود به چت جهانی</h2>
-            <input type="text" id="name-input" placeholder="نام خود را بنویسید...">
-            <button onclick="initUser()">تایید و ورود</button>
+            <h2>ورود به چت</h2>
+            <input type="text" id="name-input" placeholder="نام شما...">
+            <button onclick="initUser()" style="height: 50px; border-radius: 25px;">ورود به دنیای چت</button>
         </div>
     </div>
 
     <div class="chat-app">
         <header>
-            <h1>Global Chat 🌐</h1>
-            <span id="user-display" style="font-size: 12px; opacity: 0.6;"></span>
-            <button onclick="changeName()" style="width: auto; padding: 5px 15px; font-size: 10px; background: #ff4757;">تغییر نام</button>
+            <h1>چت جهانی 🌐</h1>
+            <button onclick="changeName()" style="width: auto; height: 32px; padding: 0 12px; font-size: 11px; background: #ff4757; border-radius: 10px;">خروج</button>
         </header>
 
         <div id="chat-messages" class="messages"></div>
 
         <div class="footer">
-            <input type="text" id="message-input" placeholder="چیزی بنویسید..." onkeypress="handleEnter(event)">
-            <button id="send-btn" onclick="sendMsg()">ارسال</button>
+            <input type="text" id="message-input" placeholder="پیام خود را اینجا بنویسید..." onkeypress="handleEnter(event)">
+            <button id="send-btn" onclick="sendMsg()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            </button>
         </div>
     </div>
 
@@ -201,78 +202,59 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <script>
-        // اطلاعات فایربیس شما
         const firebaseConfig = {
             apiKey: "AIzaSyDTZ68yTUyrpoKJdVRQzY7ZJ2mUUrWv-PM",
             databaseURL: "https://my-online-game-91998-default-rtdb.europe-west1.firebasedatabase.app/"
         };
 
-        // مقداردهی اولیه
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         let username = localStorage.getItem('chat_name');
 
-        // چک کردن نام
         if (username) {
             document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('user-display').innerText = username;
             listenForMessages();
         }
 
         function initUser() {
             const input = document.getElementById('name-input').value.trim();
-            if (input.length < 2) return alert("نام خیلی کوتاه است");
+            if (input.length < 2) return alert("نام معتبر نیست");
             username = input;
             localStorage.setItem('chat_name', username);
             document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('user-display').innerText = username;
             listenForMessages();
         }
 
-        function handleEnter(e) {
-            if (e.key === 'Enter') sendMsg();
-        }
+        function handleEnter(e) { if (e.key === 'Enter') sendMsg(); }
 
         function sendMsg() {
             const msgInput = document.getElementById('message-input');
             const text = msgInput.value.trim();
+            if (text === "") return;
 
-            if (text !== "") {
-                database.ref('messages').push({
-                    name: username,
-                    message: text,
-                    time: Date.now()
-                }).then(() => {
-                    msgInput.value = ""; // پاک کردن اینپوت بعد ارسال موفق
-                }).catch(err => {
-                    alert("خطا در ارسال: " + err.message);
-                });
-            }
+            database.ref('messages').push({
+                name: username,
+                message: text,
+                time: firebase.database.ServerValue.TIMESTAMP
+            });
+            msgInput.value = "";
+            msgInput.focus();
         }
 
         function listenForMessages() {
-            // دریافت پیام‌ها به صورت آنی
-            database.ref('messages').limitToLast(50).on('value', (snapshot) => {
-                const container = document.getElementById('chat-messages');
+            const container = document.getElementById('chat-messages');
+            database.ref('messages').limitToLast(40).on('value', (snapshot) => {
                 container.innerHTML = "";
-                
                 snapshot.forEach((child) => {
                     const data = child.val();
                     const isMe = data.name === username;
-                    
                     const msgDiv = document.createElement('div');
                     msgDiv.className = `msg ${isMe ? 'sent' : 'received'}`;
-                    
-                    msgDiv.innerHTML = `
-                        <span class="sender-name">${isMe ? 'شما' : data.name}</span>
-                        <div class="text-content">${data.message}</div>
-                    `;
-                    
+                    msgDiv.innerHTML = `<span class="sender-name">${data.name}</span>${data.message}`;
                     container.appendChild(msgDiv);
                 });
-                
-                // اسکرول خودکار به آخر
-                container.scrollTop = container.scrollHeight;
+                // اسکرول آنی به آخرین پیام
+                container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
             });
         }
 
