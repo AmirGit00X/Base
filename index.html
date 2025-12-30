@@ -3,65 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مجموعه بازی آنلاین</title>
-    <style>
-        :root { --p: #6200ee; --s: #03dac6; }
-        body { font-family: Tahoma, sans-serif; background: #121212; color: white; text-align: center; margin: 0; }
-        .screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
-        .hidden { display: none !important; }
-        button { background: var(--p); color: white; border: none; padding: 12px 25px; margin: 10px; border-radius: 8px; cursor: pointer; font-size: 16px; width: 200px; }
-        input { padding: 12px; border-radius: 8px; border: none; width: 180px; text-align: center; margin-bottom: 10px; }
-        .grid { display: grid; gap: 5px; background: #333; padding: 5px; margin-top: 20px; }
-        .cell { width: 60px; height: 60px; background: #1e1e1e; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; }
-        #timer { font-size: 24px; color: #ff0266; font-weight: bold; }
-        .back-btn { background: #333; }
-        #rooms-list { width: 100%; max-width: 400px; }
-    </style>
+    <title>چت روم جهانی</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div id="app">
-        <div id="login-screen" class="screen">
-            <h2>نام کاربری خود را وارد کنید</h2>
-            <input type="text" id="username-in" placeholder="مثلاً: علی">
-            <button onclick="login()">شروع</button>
+    <div id="login-overlay" class="overlay">
+        <div class="login-box">
+            <h2>خوش آمدید</h2>
+            <p>لطفاً نام خود را برای ورود به چت وارد کنید:</p>
+            <input type="text" id="username-input" placeholder="نام شما...">
+            <button onclick="startChat()">ورود به چت</button>
         </div>
+    </div>
 
-        <div id="menu-screen" class="screen hidden">
-            <h3 id="user-tag"></h3>
-            <button onclick="openSubMenu('tictactoe')">دوز سه تایی (3x3)</button>
-            <button onclick="openSubMenu('connect4')">دوز چهارتایی (4x4)</button>
-            <button onclick="openSubMenu('minesweeper')">مین‌روب (بزودی)</button>
-        </div>
+    <div class="chat-container">
+        <header>
+            <div class="status-dot"></div>
+            <h1>چت روم جهانی</h1>
+            <button class="exit-btn" onclick="logout()">تغییر نام</button>
+        </header>
 
-        <div id="mode-screen" class="screen hidden">
-            <h3 id="game-title"></h3>
-            <button onclick="startMode('online')">بازی آنلاین</button>
-            <button onclick="startMode('offline')">بازی آفلاین (با دوست)</button>
-            <button onclick="startMode('ai')">بازی با ربات</button>
-            <button class="back-btn" onclick="showScreen('menu-screen')">بازگشت</button>
-        </div>
-
-        <div id="lobby-screen" class="screen hidden">
-            <h3>اتاق‌های موجود</h3>
-            <div id="rooms-list"></div>
-            <button onclick="createRoom()">+ ساخت اتاق جدید</button>
-            <button class="back-btn" onclick="showScreen('mode-screen')">بازگشت</button>
-        </div>
-
-        <div id="game-screen" class="screen hidden">
-            <div id="timer-box">زمان باقی‌مانده: <span id="timer">60</span></div>
-            <div id="turn-info">نوبت شماست</div>
-            <div id="board" class="grid"></div>
-            <div style="margin-top:20px;">
-                <button onclick="leaveGame()" class="back-btn">خروج از بازی</button>
-                <button id="reset-btn" onclick="resetOffline()" class="hidden">صفر کردن امتیاز</button>
+        <div id="chat-messages" class="messages-area">
             </div>
-        </div>
+
+        <form id="chat-form" onsubmit="sendMessage(event)">
+            <input type="text" id="msg-input" placeholder="پیامی بنویسید..." autocomplete="off">
+            <button type="submit">
+                <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+            </button>
+        </form>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <script src="script.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
+
