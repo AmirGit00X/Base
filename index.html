@@ -3,197 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>چت‌روم جهانی مدرن</title>
+    <title>چت‌روم پیشرفته جهانی</title>
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;500;800&display=swap');
 
-        * {
-            box-sizing: border-box;
-            font-family: 'Vazirmatn', sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
+        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; -webkit-tap-highlight-color: transparent; }
 
         html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            background: #111119;
-            color: white;
-            overflow: hidden; /* جلوگیری از اسکرول کل صفحه در موبایل */
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            background: #0b0e14; color: white; overflow: hidden;
         }
 
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        /* صفحه ورود تمام‌صفحه */
+        /* صفحه ورود */
         .overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(15, 15, 25, 0.95);
-            backdrop-filter: blur(15px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
+            position: fixed; inset: 0; background: rgba(10, 10, 15, 0.98);
+            backdrop-filter: blur(20px); display: flex; justify-content: center;
+            align-items: center; z-index: 1000;
         }
 
         .login-box {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 30px;
-            border-radius: 25px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            text-align: center;
-            width: 85%;
-            max-width: 350px;
+            background: rgba(255, 255, 255, 0.05); padding: 35px;
+            border-radius: 30px; border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center; width: 85%; max-width: 380px;
         }
 
-        /* اپلیکیشن چت تمام‌صفحه در موبایل */
+        /* ساختار اصلی چت */
         .chat-app {
-            width: 100%;
-            height: 100%; /* تمام صفحه */
-            max-width: 600px; /* محدودیت عرض در دسکتاپ */
-            background: rgba(255, 255, 255, 0.02);
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-
-        @media (min-height: 700px) and (min-width: 600px) {
-            .chat-app {
-                height: 95vh;
-                border-radius: 30px;
-                border: 1px solid rgba(255, 255, 255, 0.1);
-            }
+            width: 100%; height: 100%; max-width: 600px;
+            margin: auto; display: flex; flex-direction: column;
+            background: #111119; position: relative;
         }
 
         header {
-            padding: 15px 20px;
-            background: rgba(255, 255, 255, 0.07);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            backdrop-filter: blur(10px);
-            z-index: 10;
+            padding: 15px 20px; background: rgba(255, 255, 255, 0.05);
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         header h1 { margin: 0; font-size: 18px; color: #00d2ff; }
 
         .messages {
-            flex: 1;
-            padding: 15px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            background: url('https://www.transparenttextures.com/patterns/cubes.png'); /* بافت ملایم پس‌زمینه */
+            flex: 1; padding: 15px; overflow-y: auto;
+            display: flex; flex-direction: column; gap: 10px;
         }
 
+        /* استایل پیام‌ها */
         .msg {
-            max-width: 85%;
-            padding: 10px 15px;
-            border-radius: 18px;
-            font-size: 15px;
-            line-height: 1.5;
-            word-wrap: break-word;
-            animation: slideUp 0.3s ease-out forwards;
+            max-width: 85%; padding: 10px 14px; border-radius: 18px;
+            font-size: 14px; position: relative; cursor: pointer;
+            transition: 0.2s; animation: slideIn 0.3s ease;
         }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        
+        @keyframes slideIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
         .sent {
-            align-self: flex-end;
-            background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
-            color: white;
-            border-bottom-left-radius: 4px;
+            align-self: flex-end; background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+            color: white; border-bottom-left-radius: 2px;
         }
 
         .received {
-            align-self: flex-start;
-            background: rgba(255, 255, 255, 0.12);
-            color: #ffffff;
-            border-bottom-right-radius: 4px;
+            align-self: flex-start; background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #eee; border-bottom-right-radius: 2px;
         }
 
-        .sender-name {
-            display: block;
-            font-size: 10px;
-            font-weight: 800;
-            margin-bottom: 3px;
-            color: #00d2ff;
-        }
-        .sent .sender-name { color: #e0faff; }
+        .sender-name { font-size: 10px; font-weight: 800; margin-bottom: 4px; display: block; color: #00d2ff; }
+        .sent .sender-name { color: #ffffff; opacity: 0.8; }
 
-        /* بخش فوتر استاندارد موبایل */
+        /* استایل ریپلای در داخل پیام */
+        .reply-content {
+            background: rgba(0, 0, 0, 0.2); padding: 5px 8px;
+            border-right: 3px solid #00d2ff; border-radius: 5px;
+            margin-bottom: 5px; font-size: 12px; opacity: 0.9;
+        }
+
+        /* نوار ریپلای بالای فیلد تایپ */
+        #reply-bar {
+            background: #1a1a25; padding: 10px 20px;
+            border-top: 1px solid #333; display: none;
+            justify-content: space-between; align-items: center;
+        }
+
         .footer {
-            padding: 12px;
-            background: #1a1a25;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding-bottom: env(safe-area-inset-bottom); /* رعایت حاشیه دکمه هوم در آیفون */
+            padding: 10px; background: #1a1a25; display: flex;
+            align-items: center; gap: 8px; padding-bottom: env(safe-area-inset-bottom);
         }
 
         input[type="text"] {
-            flex: 1;
-            height: 50px; /* ارتفاع استاندارد لمسی */
-            padding: 0 20px;
-            border-radius: 25px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            background: rgba(255, 255, 255, 0.05);
-            color: white;
-            font-size: 16px; /* جلوگیری از زوم خودکار در iOS */
-            outline: none;
+            flex: 1; height: 48px; border-radius: 24px; padding: 0 18px;
+            border: none; background: rgba(255, 255, 255, 0.05); color: white; outline: none;
         }
 
-        #send-btn {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: #00d2ff;
-            flex-shrink: 0;
+        .btn-icon {
+            width: 48px; height: 48px; border-radius: 50%; border: none;
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer; transition: 0.3s;
         }
+        #send-btn { background: #00d2ff; color: white; }
 
         .hidden { display: none !important; }
-
-        /* اسکرول‌بار زیبا */
-        .messages::-webkit-scrollbar { width: 4px; }
-        .messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
     </style>
 </head>
 <body>
 
     <div id="login-screen" class="overlay">
         <div class="login-box">
-            <h2>ورود به چت</h2>
-            <input type="text" id="name-input" placeholder="نام شما...">
-            <button onclick="initUser()" style="height: 50px; border-radius: 25px;">ورود به دنیای چت</button>
+            <h2 style="color:#00d2ff">خوش آمدید</h2>
+            <input type="text" id="name-input" placeholder="نام نمایشی شما...">
+            <button onclick="initUser()" style="background:#00d2ff; color:white; border:none; padding:15px; border-radius:20px; width:100%; font-weight:bold;">تایید نام و ورود</button>
         </div>
     </div>
 
     <div class="chat-app">
         <header>
             <h1>چت جهانی 🌐</h1>
-            <button onclick="changeName()" style="width: auto; height: 32px; padding: 0 12px; font-size: 11px; background: #ff4757; border-radius: 10px;">خروج</button>
+            <button onclick="changeName()" style="background:none; border:1px solid #ff4757; color:#ff4757; padding:5px 12px; border-radius:10px; font-size:12px;">تغییر نام</button>
         </header>
 
         <div id="chat-messages" class="messages"></div>
 
+        <div id="reply-bar">
+            <div id="reply-info" style="font-size: 12px; border-right: 2px solid #00d2ff; padding-right: 10px;"></div>
+            <button onclick="cancelReply()" style="background:none; border:none; color:#ff4757; font-size:18px;">&times;</button>
+        </div>
+
         <div class="footer">
-            <input type="text" id="message-input" placeholder="پیام خود را اینجا بنویسید..." onkeypress="handleEnter(event)">
-            <button id="send-btn" onclick="sendMsg()">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            <input type="text" id="message-input" placeholder="پیام خود را بنویسید..." onkeypress="handleEnter(event)">
+            <button id="send-btn" class="btn-icon" onclick="sendMsg()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
             </button>
         </div>
     </div>
@@ -209,7 +147,9 @@
 
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
+        
         let username = localStorage.getItem('chat_name');
+        let replyData = null;
 
         if (username) {
             document.getElementById('login-screen').classList.add('hidden');
@@ -217,50 +157,82 @@
         }
 
         function initUser() {
-            const input = document.getElementById('name-input').value.trim();
-            if (input.length < 2) return alert("نام معتبر نیست");
-            username = input;
+            const val = document.getElementById('name-input').value.trim();
+            if(val.length < 2) return alert("نام کوتاه است");
+            username = val;
             localStorage.setItem('chat_name', username);
             document.getElementById('login-screen').classList.add('hidden');
             listenForMessages();
         }
 
-        function handleEnter(e) { if (e.key === 'Enter') sendMsg(); }
+        function handleEnter(e) { if(e.key === 'Enter') sendMsg(); }
+
+        function setReply(sender, text) {
+            replyData = { sender, text };
+            document.getElementById('reply-info').innerHTML = `<b style="color:#00d2ff">${sender}</b><br>${text.substring(0,30)}...`;
+            document.getElementById('reply-bar').style.display = 'flex';
+            document.getElementById('message-input').focus();
+        }
+
+        function cancelReply() {
+            replyData = null;
+            document.getElementById('reply-bar').style.display = 'none';
+        }
 
         function sendMsg() {
-            const msgInput = document.getElementById('message-input');
-            const text = msgInput.value.trim();
-            if (text === "") return;
+            const input = document.getElementById('message-input');
+            const text = input.value.trim();
+            if(!text) return;
 
-            database.ref('messages').push({
+            const msgObj = {
                 name: username,
                 message: text,
                 time: firebase.database.ServerValue.TIMESTAMP
-            });
-            msgInput.value = "";
-            msgInput.focus();
+            };
+
+            if(replyData) {
+                msgObj.replyTo = replyData;
+                cancelReply();
+            }
+
+            database.ref('messages').push(msgObj);
+            input.value = "";
         }
 
         function listenForMessages() {
             const container = document.getElementById('chat-messages');
-            database.ref('messages').limitToLast(40).on('value', (snapshot) => {
+            database.ref('messages').limitToLast(50).on('value', (snapshot) => {
                 container.innerHTML = "";
                 snapshot.forEach((child) => {
                     const data = child.val();
                     const isMe = data.name === username;
-                    const msgDiv = document.createElement('div');
-                    msgDiv.className = `msg ${isMe ? 'sent' : 'received'}`;
-                    msgDiv.innerHTML = `<span class="sender-name">${data.name}</span>${data.message}`;
-                    container.appendChild(msgDiv);
+                    const div = document.createElement('div');
+                    div.className = `msg ${isMe ? 'sent' : 'received'}`;
+                    
+                    // هندل کردن بخش ریپلای در پیام
+                    let replyHTML = "";
+                    if(data.replyTo) {
+                        replyHTML = `<div class="reply-content"><b>${data.replyTo.sender}:</b> ${data.replyTo.text}</div>`;
+                    }
+
+                    div.innerHTML = `
+                        <span class="sender-name">${data.name}</span>
+                        ${replyHTML}
+                        <div class="text">${data.message}</div>
+                    `;
+                    
+                    div.onclick = () => setReply(data.name, data.message);
+                    container.appendChild(div);
                 });
-                // اسکرول آنی به آخرین پیام
                 container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
             });
         }
 
         function changeName() {
-            localStorage.removeItem('chat_name');
-            location.reload();
+            if(confirm("آیا می‌خواهید نام خود را تغییر دهید؟")) {
+                localStorage.removeItem('chat_name');
+                location.reload();
+            }
         }
     </script>
 </body>
