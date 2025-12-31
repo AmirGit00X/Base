@@ -22,8 +22,11 @@
         .cell.o { color: #f472b6; text-shadow: 0 0 15px #f472b6; }
 
         .status-bar { display: flex; justify-content: space-between; align-items: center; background: #0f172a; padding: 12px; border-radius: 15px; margin-bottom: 15px; border: 1px solid #334155; }
-        .room-item { background: #0f172a; padding: 12px; margin: 8px 0; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #475569; }
-        .room-code { font-family: 'Courier New', Courier, monospace; background: #334155; padding: 2px 8px; border-radius: 5px; color: #fbbf24; font-weight: bold; }
+        /* استایل جدید برای وسط‌چین کردن وضعیت نوبت */
+        #game-status { flex-grow: 1; text-align: center; font-weight: bold; color: var(--primary); font-size: 0.9rem; padding: 0 5px; }
+        
+        .room-item { background: #0f172a; padding: 12px; margin: 8px 0; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #475569; text-align: right; }
+        .room-code { font-family: 'Courier New', monospace; background: #334155; padding: 2px 8px; border-radius: 5px; color: #fbbf24; font-weight: bold; }
         #result-overlay { background: rgba(15, 23, 42, 0.95); border-radius: 24px; padding: 30px; border: 2px solid var(--primary); }
     </style>
 </head>
@@ -53,7 +56,7 @@
 
     <div id="lobby-screen" class="hidden">
         <h3>اتاق‌های فعال</h3>
-        <div id="room-list" style="max-height: 200px; overflow-y: auto;"></div>
+        <div id="room-list" style="max-height: 200px; overflow-y: auto; margin-bottom: 10px;"></div>
         <button class="menu-btn" onclick="createOnlineRoom()">➕ ساخت اتاق جدید</button>
         <button class="menu-btn" onclick="backToMenu()" style="background:#475569">برگشت</button>
     </div>
@@ -61,9 +64,9 @@
     <div id="game-screen" class="hidden">
         <div id="timer-box" style="font-size: 0.9rem; margin-bottom: 5px;">زمان باقی‌مانده: <span id="sec">30</span>s</div>
         <div class="status-bar">
-            <div><small id="p1-name">بازیکن X</small><br><span id="p1-score" style="font-size:1.5rem">0</span></div>
-            <div id="game-status" style="font-weight: bold; color:var(--primary)">نوبت X</div>
-            <div><small id="p2-name">بازیکن O</small><br><span id="p2-score" style="font-size:1.5rem">0</span></div>
+            <div style="width: 80px; text-align: right;"><small id="p1-name-display">بازیکن ۱</small><br><span id="p1-score" style="font-size:1.5rem">0</span></div>
+            <div id="game-status">درحال اتصال...</div>
+            <div style="width: 80px; text-align: left;"><small id="p2-name-display">بازیکن ۲</small><br><span id="p2-score" style="font-size:1.5rem">0</span></div>
         </div>
         <div class="board" id="board">
             <div class="cell" onclick="handleMove(0)"></div><div class="cell" onclick="handleMove(1)"></div><div class="cell" onclick="handleMove(2)"></div>
@@ -71,12 +74,12 @@
             <div class="cell" onclick="handleMove(6)"></div><div class="cell" onclick="handleMove(7)"></div><div class="cell" onclick="handleMove(8)"></div>
         </div>
         <div id="round-info">راند: 1 / 5</div>
-        <button class="menu-btn" onclick="backToMenu()" style="background:#475569; font-size:0.9rem; padding:12px; margin-top: 10px;">🏠 خروج به منوی اصلی</button>
+        <button class="menu-btn" onclick="backToMenu()" style="background:#475569; font-size:0.9rem; padding:12px; margin-top: 10px;">🏠 خروج از بازی</button>
     </div>
 
     <div id="result-screen" class="hidden">
         <div id="result-overlay">
-            <h2 id="winner-text" style="color: var(--secondary);">پایان بازی!</h2>
+            <h2 id="winner-text" style="color: var(--secondary);">پایان نبرد!</h2>
             <div id="final-scores" style="font-size: 1.2rem; margin: 20px 0;"></div>
             <button class="menu-btn" onclick="backToMenu()">بازگشت به منو</button>
         </div>
@@ -90,13 +93,20 @@
 
     let currentUser = "", gameMode = "", board = Array(9).fill(""), currentPlayer = "X";
     let scores = { X: 0, O: 0 }, rounds = 1, currentRoomId = null, mySymbol = "X", moveTimer = null, aiLevel = 'easy';
+    let p1Name = "بازیکن 1", p2Name = "بازیکن 2";
+
+    // تابع کمکی برای محدود کردن نام به 10 کاراکتر
+    function limitStr(str, limit = 10) {
+        if (!str) return str;
+        return str.length > limit ? str.substring(0, limit) + "..." : str;
+    }
 
     function login() {
         const input = document.getElementById('username-input').value.trim();
         if(!input) return alert("لطفاً نام خود را وارد کنید");
         currentUser = input;
         showScreen('menu-screen');
-        document.getElementById('welcome-msg').innerText = `خوش آمدی، ${currentUser}`;
+        document.getElementById('welcome-msg').innerText = `خوش آمدی، ${limitStr(currentUser)}`;
     }
 
     function showScreen(id) {
@@ -117,33 +127,9 @@
         currentRoomId = null;
     }
 
-    function minimax(reBoard, player) {
-        let array = reBoard.filter(s => s !== "X" && s !== "O");
-        if (checkWinner(reBoard) === "X") return {score: -10};
-        else if (checkWinner(reBoard) === "O") return {score: 10};
-        else if (array.length === 0) return {score: 0};
-        let moves = [];
-        for (let i = 0; i < array.length; i++) {
-            let move = {index: reBoard.indexOf(array[i])};
-            reBoard[move.index] = player;
-            move.score = (player === "O") ? minimax(reBoard, "X").score : minimax(reBoard, "O").score;
-            reBoard[move.index] = move.index;
-            moves.push(move);
-        }
-        let bestMove;
-        if(player === "O") {
-            let bestScore = -10000;
-            for(let i = 0; i < moves.length; i++) if(moves[i].score > bestScore) { bestScore = moves[i].score; bestMove = i; }
-        } else {
-            let bestScore = 10000;
-            for(let i = 0; i < moves.length; i++) if(moves[i].score < bestScore) { bestScore = moves[i].score; bestMove = i; }
-        }
-        return moves[bestMove];
-    }
-
     async function handleMove(i) {
         if (board[i] !== "" || checkWinner(board)) return;
-        if (gameMode === "online" && currentPlayer !== mySymbol) return;
+        if (gameMode === "online" && (currentPlayer !== mySymbol || !p2Name)) return;
         board[i] = currentPlayer;
         renderBoard();
         const winSymbol = checkWinner(board);
@@ -162,16 +148,8 @@
     }
 
     function makeAiMove() {
-        let idx;
-        if(aiLevel === 'easy') {
-            const avail = board.map((v,i) => v===""?i:null).filter(v=>v!==null);
-            idx = avail[Math.floor(Math.random()*avail.length)];
-        } else if(aiLevel === 'medium') {
-            idx = board.indexOf("");
-        } else {
-            let tempBoard = board.map((v, i) => v === "" ? i : v);
-            idx = minimax(tempBoard, "O").index;
-        }
+        const avail = board.map((v,i) => v===""?i:null).filter(v=>v!==null);
+        let idx = avail[Math.floor(Math.random()*avail.length)];
         handleMove(idx);
     }
 
@@ -183,7 +161,7 @@
             if(s <= 0) {
                 clearInterval(moveTimer);
                 let winner = (currentPlayer === "X") ? "O" : "X";
-                alert(`زمان بازیکن ${currentPlayer} تمام شد! برنده نهایی بازی: بازیکن ${winner}`);
+                alert(`زمان بازیکن ${limitStr(currentPlayer === "X" ? p1Name : p2Name)} تمام شد!`);
                 scores[winner] = 5;
                 showFinalResult();
             }
@@ -196,12 +174,15 @@
         else { rounds++; document.getElementById('round-info').innerText = `راند: ${rounds} / 5`; setTimeout(resetGame, 1200); }
     }
 
-    function showFinalResult() {
+    function showFinalResult(exitWin = false) {
+        clearInterval(moveTimer);
         const winnerText = document.getElementById('winner-text');
         const scoresText = document.getElementById('final-scores');
-        let msg = (scores.X > scores.O) ? "🏆 برنده نهایی: بازیکن X" : (scores.O > scores.X ? "🏆 برنده نهایی: بازیکن O" : "🤝 بازی مساوی شد!");
+        let msg = "";
+        if (exitWin) msg = "🏆 حریف خارج شد! شما برنده شدید.";
+        else msg = (scores.X > scores.O) ? `🏆 برنده نهایی: ${limitStr(p1Name)}` : (scores.O > scores.X ? `🏆 برنده نهایی: ${limitStr(p2Name)}` : "🤝 بازی مساوی شد!");
         winnerText.innerText = msg;
-        scoresText.innerText = `امتیاز نهایی\nX: ${scores.X} | O: ${scores.O}`;
+        scoresText.innerText = `امتیاز نهایی\n${limitStr(p1Name)}: ${scores.X} | ${limitStr(p2Name) || '...'}: ${scores.O}`;
         showScreen('result-screen');
     }
 
@@ -216,7 +197,11 @@
         board.forEach((v, i) => { cells[i].innerText = v; cells[i].className = `cell ${v.toLowerCase()}`; });
         document.getElementById('p1-score').innerText = scores.X;
         document.getElementById('p2-score').innerText = scores.O;
-        document.getElementById('game-status').innerText = `نوبت: ${currentPlayer}`;
+        document.getElementById('p1-name-display').innerText = limitStr(p1Name);
+        document.getElementById('p2-name-display').innerText = p2Name ? limitStr(p2Name) : "منتظر...";
+        
+        let turnName = (currentPlayer === "X") ? p1Name : (p2Name || "حریف");
+        document.getElementById('game-status').innerText = `نوبت: ${limitStr(turnName)}`;
     }
 
     async function showLobby() {
@@ -225,38 +210,42 @@
         const list = document.getElementById('room-list');
         list.innerHTML = (data && data.length) ? "" : "<p style='color:#94a3b8'>اتاقی یافت نشد...</p>";
         if(data) data.forEach(r => {
-            list.innerHTML += `<div class="room-item"><span>کد اتاق: <b class="room-code">${r.room_code}</b></span><button class="menu-btn" style="width:70px; padding:5px; font-size:0.9rem;" onclick="joinRoom('${r.id}')">ورود</button></div>`;
+            list.innerHTML += `<div class="room-item">
+                <span>کد: <b class="room-code">${r.room_code}</b> <br><small>سازنده: ${limitStr(r.player1_name)}</small></span>
+                <button class="menu-btn" style="width:70px; padding:5px; font-size:0.9rem;" onclick="joinRoom('${r.id}')">ورود</button>
+            </div>`;
         });
     }
 
     async function createOnlineRoom() {
         const code = Math.floor(1000 + Math.random() * 9000);
         const { data } = await supabaseClient.from('rooms').insert([{ 
-            player1_name: currentUser, 
-            room_code: code.toString(),
-            board: Array(9).fill(""), 
-            turn: "X", 
-            scores: {X:0, O:0},
-            is_active: true
+            player1_name: currentUser, room_code: code.toString(),
+            board: Array(9).fill(""), turn: "X", scores: {X:0, O:0}, is_active: true
         }]).select();
-        if(data) { currentRoomId = data[0].id; mySymbol = "X"; setupOnline(); }
+        if(data) { currentRoomId = data[0].id; mySymbol = "X"; p1Name = currentUser; p2Name = null; setupOnline(); }
     }
 
     async function joinRoom(id) {
-        await supabaseClient.from('rooms').update({ player2_name: currentUser }).eq('id', id);
-        currentRoomId = id; mySymbol = "O"; setupOnline();
+        const { data } = await supabaseClient.from('rooms').update({ player2_name: currentUser }).eq('id', id).select();
+        if(data) { currentRoomId = id; mySymbol = "O"; p1Name = data[0].player1_name; p2Name = currentUser; setupOnline(); }
     }
 
     function setupOnline() {
-        gameMode = "online"; showScreen('game-screen');
+        gameMode = "online"; showScreen('game-screen'); renderBoard();
         supabaseClient.channel(`room:${currentRoomId}`)
             .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rooms', filter: `id=eq.${currentRoomId}` }, payload => {
                 const d = payload.new;
                 board = d.board; currentPlayer = d.turn; scores = d.scores; rounds = d.rounds_played + 1;
-                if(!d.is_active) { alert("اتاق بسته شد."); showScreen('menu-screen'); return; }
+                p1Name = d.player1_name; p2Name = d.player2_name;
+                if(!d.is_active) { 
+                    if(rounds <= 5 && scores.X < 5 && scores.O < 5) showFinalResult(true);
+                    else { alert("اتاق بسته شد."); showScreen('menu-screen'); }
+                    return; 
+                }
                 renderBoard();
                 if(rounds > 5 || scores.X >= 5 || scores.O >= 5) { showFinalResult(); return; }
-                if(currentPlayer === mySymbol && !checkWinner(board)) startTimer(); else clearInterval(moveTimer);
+                if(currentPlayer === mySymbol && !checkWinner(board) && p2Name) startTimer(); else clearInterval(moveTimer);
             }).subscribe();
     }
 
@@ -264,10 +253,10 @@
         await supabaseClient.from('rooms').update({ board, turn: currentPlayer, scores, rounds_played: rounds-1 }).eq('id', currentRoomId);
     }
 
-    function startOffline() { gameMode = "offline"; resetScores(); showScreen('game-screen'); }
+    function startOffline() { gameMode = "offline"; p1Name = "بازیکن 1"; p2Name = "بازیکن 2"; resetScores(); showScreen('game-screen'); }
     function showAiLevels() { showScreen('ai-screen'); }
-    function startAi(lvl) { aiLevel = lvl; gameMode = "ai"; resetScores(); showScreen('game-screen'); }
-    function resetGame() { board = Array(9).fill(""); currentPlayer = "X"; renderBoard(); if(gameMode !== "") startTimer(); }
+    function startAi(lvl) { aiLevel = lvl; gameMode = "ai"; p1Name = currentUser; p2Name = "ربات"; resetScores(); showScreen('game-screen'); }
+    function resetGame() { board = Array(9).fill(""); currentPlayer = "X"; renderBoard(); if(gameMode !== "" && (gameMode !== 'online' || p2Name)) startTimer(); }
     function resetScores() { scores = {X:0, O:0}; rounds = 1; document.getElementById('round-info').innerText = "راند: 1 / 5"; resetGame(); }
 </script>
 </body>
