@@ -2,239 +2,273 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>چت‌روم پیشرفته جهانی</title>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دوز حرفه‌ای آنلاین</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;500;800&display=swap');
-
-        * { box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; -webkit-tap-highlight-color: transparent; }
-
-        html, body {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            background: #0b0e14; color: white; overflow: hidden;
-        }
-
-        /* صفحه ورود */
-        .overlay {
-            position: fixed; inset: 0; background: rgba(10, 10, 15, 0.98);
-            backdrop-filter: blur(20px); display: flex; justify-content: center;
-            align-items: center; z-index: 1000;
-        }
-
-        .login-box {
-            background: rgba(255, 255, 255, 0.05); padding: 35px;
-            border-radius: 30px; border: 1px solid rgba(255, 255, 255, 0.1);
-            text-align: center; width: 85%; max-width: 380px;
-        }
-
-        /* ساختار اصلی چت */
-        .chat-app {
-            width: 100%; height: 100%; max-width: 600px;
-            margin: auto; display: flex; flex-direction: column;
-            background: #111119; position: relative;
-        }
-
-        header {
-            padding: 15px 20px; background: rgba(255, 255, 255, 0.05);
-            display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        header h1 { margin: 0; font-size: 18px; color: #00d2ff; }
-
-        .messages {
-            flex: 1; padding: 15px; overflow-y: auto;
-            display: flex; flex-direction: column; gap: 10px;
-        }
-
-        /* استایل پیام‌ها */
-        .msg {
-            max-width: 85%; padding: 10px 14px; border-radius: 18px;
-            font-size: 14px; position: relative; cursor: pointer;
-            transition: 0.2s; animation: slideIn 0.3s ease;
-        }
-        
-        @keyframes slideIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
-        .sent {
-            align-self: flex-end; background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
-            color: white; border-bottom-left-radius: 2px;
-        }
-
-        .received {
-            align-self: flex-start; background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #eee; border-bottom-right-radius: 2px;
-        }
-
-        .sender-name { font-size: 10px; font-weight: 800; margin-bottom: 4px; display: block; color: #00d2ff; }
-        .sent .sender-name { color: #ffffff; opacity: 0.8; }
-
-        /* استایل ریپلای در داخل پیام */
-        .reply-content {
-            background: rgba(0, 0, 0, 0.2); padding: 5px 8px;
-            border-right: 3px solid #00d2ff; border-radius: 5px;
-            margin-bottom: 5px; font-size: 12px; opacity: 0.9;
-        }
-
-        /* نوار ریپلای بالای فیلد تایپ */
-        #reply-bar {
-            background: #1a1a25; padding: 10px 20px;
-            border-top: 1px solid #333; display: none;
-            justify-content: space-between; align-items: center;
-        }
-
-        .footer {
-            padding: 10px; background: #1a1a25; display: flex;
-            align-items: center; gap: 8px; padding-bottom: env(safe-area-inset-bottom);
-        }
-
-        input[type="text"] {
-            flex: 1; height: 48px; border-radius: 24px; padding: 0 18px;
-            border: none; background: rgba(255, 255, 255, 0.05); color: white; outline: none;
-        }
-
-        .btn-icon {
-            width: 48px; height: 48px; border-radius: 50%; border: none;
-            display: flex; justify-content: center; align-items: center;
-            cursor: pointer; transition: 0.3s;
-        }
-        #send-btn { background: #00d2ff; color: white; }
-
+        :root { --primary: #6366f1; --secondary: #ec4899; --bg: #0f172a; --card: #1e293b; --text: #f8fafc; }
+        * { box-sizing: border-box; transition: all 0.2s ease; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { width: 95%; max-width: 450px; background: var(--card); padding: 25px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid #334155; position: relative; text-align: center; }
         .hidden { display: none !important; }
+        
+        input { width: 100%; padding: 15px; margin: 15px 0; border-radius: 12px; border: 2px solid #334155; background: #0f172a; color: white; font-size: 1rem; text-align: center; }
+        .menu-btn { width: 100%; padding: 16px; margin: 8px 0; border: none; border-radius: 14px; background: var(--primary); color: white; font-size: 1.1rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .menu-btn:hover { filter: brightness(1.2); transform: translateY(-2px); }
+        
+        .board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 20px 0; }
+        .cell { aspect-ratio: 1; background: #334155; border-radius: 16px; display: flex; justify-content: center; align-items: center; font-size: 3rem; font-weight: 800; cursor: pointer; }
+        .cell.x { color: #60a5fa; text-shadow: 0 0 15px #60a5fa; }
+        .cell.o { color: #f472b6; text-shadow: 0 0 15px #f472b6; }
+
+        .status-bar { display: flex; justify-content: space-between; align-items: center; background: #0f172a; padding: 12px; border-radius: 15px; margin-bottom: 15px; border: 1px solid #334155; }
+        .room-item { background: #0f172a; padding: 12px; margin: 8px 0; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #475569; }
+        .room-code { font-family: 'Courier New', Courier, monospace; background: #334155; padding: 2px 8px; border-radius: 5px; color: #fbbf24; font-weight: bold; }
+        #result-overlay { background: rgba(15, 23, 42, 0.95); border-radius: 24px; padding: 30px; border: 2px solid var(--primary); }
     </style>
 </head>
 <body>
 
-    <div id="login-screen" class="overlay">
-        <div class="login-box">
-            <h2 style="color:#00d2ff">خوش آمدید</h2>
-            <input type="text" id="name-input" placeholder="نام نمایشی شما...">
-            <button onclick="initUser()" style="background:#00d2ff; color:white; border:none; padding:15px; border-radius:20px; width:100%; font-weight:bold;">تایید نام و ورود</button>
-        </div>
+<div class="container">
+    <div id="login-screen">
+        <h2>🎮 خوش آمدید</h2>
+        <input type="text" id="username-input" placeholder="نام خود را وارد کنید...">
+        <button class="menu-btn" onclick="login()">ورود به دنیای بازی</button>
     </div>
 
-    <div class="chat-app">
-        <header>
-            <h1>چت جهانی 🌐</h1>
-            <button onclick="changeName()" style="background:none; border:1px solid #ff4757; color:#ff4757; padding:5px 12px; border-radius:10px; font-size:12px;">تغییر نام</button>
-        </header>
-
-        <div id="chat-messages" class="messages"></div>
-
-        <div id="reply-bar">
-            <div id="reply-info" style="font-size: 12px; border-right: 2px solid #00d2ff; padding-right: 10px;"></div>
-            <button onclick="cancelReply()" style="background:none; border:none; color:#ff4757; font-size:18px;">&times;</button>
-        </div>
-
-        <div class="footer">
-            <input type="text" id="message-input" placeholder="پیام خود را بنویسید..." onkeypress="handleEnter(event)">
-            <button id="send-btn" class="btn-icon" onclick="sendMsg()">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-            </button>
-        </div>
+    <div id="menu-screen" class="hidden">
+        <h3 id="welcome-msg"></h3>
+        <button class="menu-btn" onclick="showLobby()" style="background: #6366f1;">🌐 بازی آنلاین</button>
+        <button class="menu-btn" onclick="startOffline()" style="background: #10b981;">👥 بازی آفلاین (دو نفره)</button>
+        <button class="menu-btn" onclick="showAiLevels()" style="background: #f59e0b;">🤖 بازی با ربات</button>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <div id="ai-screen" class="hidden">
+        <h3>انتخاب سطح سختی</h3>
+        <button class="menu-btn" onclick="startAi('easy')">آسان</button>
+        <button class="menu-btn" onclick="startAi('medium')">متوسط</button>
+        <button class="menu-btn" onclick="startAi('hard')">سخت</button>
+        <button class="menu-btn" onclick="backToMenu()" style="background:#475569">برگشت</button>
+    </div>
 
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyDTZ68yTUyrpoKJdVRQzY7ZJ2mUUrWv-PM",
-            databaseURL: "https://my-online-game-91998-default-rtdb.europe-west1.firebasedatabase.app/"
-        };
+    <div id="lobby-screen" class="hidden">
+        <h3>اتاق‌های فعال</h3>
+        <div id="room-list" style="max-height: 200px; overflow-y: auto;"></div>
+        <button class="menu-btn" onclick="createOnlineRoom()">➕ ساخت اتاق جدید</button>
+        <button class="menu-btn" onclick="backToMenu()" style="background:#475569">برگشت</button>
+    </div>
 
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-        
-        let username = localStorage.getItem('chat_name');
-        let replyData = null;
+    <div id="game-screen" class="hidden">
+        <div id="timer-box" style="font-size: 0.9rem; margin-bottom: 5px;">زمان باقی‌مانده: <span id="sec">30</span>s</div>
+        <div class="status-bar">
+            <div><small id="p1-name">بازیکن X</small><br><span id="p1-score" style="font-size:1.5rem">0</span></div>
+            <div id="game-status" style="font-weight: bold; color:var(--primary)">نوبت X</div>
+            <div><small id="p2-name">بازیکن O</small><br><span id="p2-score" style="font-size:1.5rem">0</span></div>
+        </div>
+        <div class="board" id="board">
+            <div class="cell" onclick="handleMove(0)"></div><div class="cell" onclick="handleMove(1)"></div><div class="cell" onclick="handleMove(2)"></div>
+            <div class="cell" onclick="handleMove(3)"></div><div class="cell" onclick="handleMove(4)"></div><div class="cell" onclick="handleMove(5)"></div>
+            <div class="cell" onclick="handleMove(6)"></div><div class="cell" onclick="handleMove(7)"></div><div class="cell" onclick="handleMove(8)"></div>
+        </div>
+        <div id="round-info">راند: 1 / 5</div>
+        <button class="menu-btn" onclick="backToMenu()" style="background:#475569; font-size:0.9rem; padding:12px; margin-top: 10px;">🏠 خروج به منوی اصلی</button>
+    </div>
 
-        if (username) {
-            document.getElementById('login-screen').classList.add('hidden');
-            listenForMessages();
+    <div id="result-screen" class="hidden">
+        <div id="result-overlay">
+            <h2 id="winner-text" style="color: var(--secondary);">پایان بازی!</h2>
+            <div id="final-scores" style="font-size: 1.2rem; margin: 20px 0;"></div>
+            <button class="menu-btn" onclick="backToMenu()">بازگشت به منو</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const SB_URL = 'https://kbtvvcbgnvohlxncfjdu.supabase.co';
+    const SB_KEY = 'sb_publishable_1S4Ogjebi8k6P7VJZ3te4g_cmub4ub9';
+    const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+
+    let currentUser = "", gameMode = "", board = Array(9).fill(""), currentPlayer = "X";
+    let scores = { X: 0, O: 0 }, rounds = 1, currentRoomId = null, mySymbol = "X", moveTimer = null, aiLevel = 'easy';
+
+    function login() {
+        const input = document.getElementById('username-input').value.trim();
+        if(!input) return alert("لطفاً نام خود را وارد کنید");
+        currentUser = input;
+        showScreen('menu-screen');
+        document.getElementById('welcome-msg').innerText = `خوش آمدی، ${currentUser}`;
+    }
+
+    function showScreen(id) {
+        document.querySelectorAll('.container > div').forEach(d => d.classList.add('hidden'));
+        document.getElementById(id).classList.remove('hidden');
+        if(id !== 'game-screen') clearInterval(moveTimer);
+    }
+
+    function backToMenu() {
+        if(currentRoomId && gameMode === "online") closeRoom();
+        showScreen('menu-screen');
+        resetScores();
+    }
+
+    async function closeRoom() {
+        await supabaseClient.from('rooms').update({ is_active: false }).eq('id', currentRoomId);
+        supabaseClient.channel(`room:${currentRoomId}`).unsubscribe();
+        currentRoomId = null;
+    }
+
+    function minimax(reBoard, player) {
+        let array = reBoard.filter(s => s !== "X" && s !== "O");
+        if (checkWinner(reBoard) === "X") return {score: -10};
+        else if (checkWinner(reBoard) === "O") return {score: 10};
+        else if (array.length === 0) return {score: 0};
+        let moves = [];
+        for (let i = 0; i < array.length; i++) {
+            let move = {index: reBoard.indexOf(array[i])};
+            reBoard[move.index] = player;
+            move.score = (player === "O") ? minimax(reBoard, "X").score : minimax(reBoard, "O").score;
+            reBoard[move.index] = move.index;
+            moves.push(move);
         }
-
-        function initUser() {
-            const val = document.getElementById('name-input').value.trim();
-            if(val.length < 2) return alert("نام کوتاه است");
-            username = val;
-            localStorage.setItem('chat_name', username);
-            document.getElementById('login-screen').classList.add('hidden');
-            listenForMessages();
+        let bestMove;
+        if(player === "O") {
+            let bestScore = -10000;
+            for(let i = 0; i < moves.length; i++) if(moves[i].score > bestScore) { bestScore = moves[i].score; bestMove = i; }
+        } else {
+            let bestScore = 10000;
+            for(let i = 0; i < moves.length; i++) if(moves[i].score < bestScore) { bestScore = moves[i].score; bestMove = i; }
         }
+        return moves[bestMove];
+    }
 
-        function handleEnter(e) { if(e.key === 'Enter') sendMsg(); }
-
-        function setReply(sender, text) {
-            replyData = { sender, text };
-            document.getElementById('reply-info').innerHTML = `<b style="color:#00d2ff">${sender}</b><br>${text.substring(0,30)}...`;
-            document.getElementById('reply-bar').style.display = 'flex';
-            document.getElementById('message-input').focus();
+    async function handleMove(i) {
+        if (board[i] !== "" || checkWinner(board)) return;
+        if (gameMode === "online" && currentPlayer !== mySymbol) return;
+        board[i] = currentPlayer;
+        renderBoard();
+        const winSymbol = checkWinner(board);
+        if (winSymbol) {
+            scores[winSymbol]++;
+            if(gameMode === "online") await syncMove();
+            processRoundEnd();
+        } else if (!board.includes("")) {
+            processRoundEnd();
+        } else {
+            currentPlayer = (currentPlayer === "X") ? "O" : "X";
+            startTimer();
+            if(gameMode === "online") await syncMove();
+            if(gameMode === "ai" && currentPlayer === "O") setTimeout(makeAiMove, 500);
         }
+    }
 
-        function cancelReply() {
-            replyData = null;
-            document.getElementById('reply-bar').style.display = 'none';
+    function makeAiMove() {
+        let idx;
+        if(aiLevel === 'easy') {
+            const avail = board.map((v,i) => v===""?i:null).filter(v=>v!==null);
+            idx = avail[Math.floor(Math.random()*avail.length)];
+        } else if(aiLevel === 'medium') {
+            idx = board.indexOf("");
+        } else {
+            let tempBoard = board.map((v, i) => v === "" ? i : v);
+            idx = minimax(tempBoard, "O").index;
         }
+        handleMove(idx);
+    }
 
-        function sendMsg() {
-            const input = document.getElementById('message-input');
-            const text = input.value.trim();
-            if(!text) return;
-
-            const msgObj = {
-                name: username,
-                message: text,
-                time: firebase.database.ServerValue.TIMESTAMP
-            };
-
-            if(replyData) {
-                msgObj.replyTo = replyData;
-                cancelReply();
+    function startTimer() {
+        clearInterval(moveTimer);
+        let s = 30; document.getElementById('sec').innerText = s;
+        moveTimer = setInterval(() => {
+            s--; document.getElementById('sec').innerText = s;
+            if(s <= 0) {
+                clearInterval(moveTimer);
+                let winner = (currentPlayer === "X") ? "O" : "X";
+                alert(`زمان بازیکن ${currentPlayer} تمام شد! برنده نهایی بازی: بازیکن ${winner}`);
+                scores[winner] = 5;
+                showFinalResult();
             }
+        }, 1000);
+    }
 
-            database.ref('messages').push(msgObj);
-            input.value = "";
-        }
+    function processRoundEnd() {
+        clearInterval(moveTimer);
+        if(rounds >= 5) showFinalResult();
+        else { rounds++; document.getElementById('round-info').innerText = `راند: ${rounds} / 5`; setTimeout(resetGame, 1200); }
+    }
 
-        function listenForMessages() {
-            const container = document.getElementById('chat-messages');
-            database.ref('messages').limitToLast(50).on('value', (snapshot) => {
-                container.innerHTML = "";
-                snapshot.forEach((child) => {
-                    const data = child.val();
-                    const isMe = data.name === username;
-                    const div = document.createElement('div');
-                    div.className = `msg ${isMe ? 'sent' : 'received'}`;
-                    
-                    // هندل کردن بخش ریپلای در پیام
-                    let replyHTML = "";
-                    if(data.replyTo) {
-                        replyHTML = `<div class="reply-content"><b>${data.replyTo.sender}:</b> ${data.replyTo.text}</div>`;
-                    }
+    function showFinalResult() {
+        const winnerText = document.getElementById('winner-text');
+        const scoresText = document.getElementById('final-scores');
+        let msg = (scores.X > scores.O) ? "🏆 برنده نهایی: بازیکن X" : (scores.O > scores.X ? "🏆 برنده نهایی: بازیکن O" : "🤝 بازی مساوی شد!");
+        winnerText.innerText = msg;
+        scoresText.innerText = `امتیاز نهایی\nX: ${scores.X} | O: ${scores.O}`;
+        showScreen('result-screen');
+    }
 
-                    div.innerHTML = `
-                        <span class="sender-name">${data.name}</span>
-                        ${replyHTML}
-                        <div class="text">${data.message}</div>
-                    `;
-                    
-                    div.onclick = () => setReply(data.name, data.message);
-                    container.appendChild(div);
-                });
-                container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
-            });
-        }
+    function checkWinner(b) {
+        const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+        const win = wins.find(c => b[c[0]] && b[c[0]] === b[c[1]] && b[c[0]] === b[c[2]]);
+        return win ? b[win[0]] : null;
+    }
 
-        function changeName() {
-            if(confirm("آیا می‌خواهید نام خود را تغییر دهید؟")) {
-                localStorage.removeItem('chat_name');
-                location.reload();
-            }
-        }
-    </script>
+    function renderBoard() {
+        const cells = document.querySelectorAll('.cell');
+        board.forEach((v, i) => { cells[i].innerText = v; cells[i].className = `cell ${v.toLowerCase()}`; });
+        document.getElementById('p1-score').innerText = scores.X;
+        document.getElementById('p2-score').innerText = scores.O;
+        document.getElementById('game-status').innerText = `نوبت: ${currentPlayer}`;
+    }
+
+    async function showLobby() {
+        showScreen('lobby-screen');
+        const { data } = await supabaseClient.from('rooms').select('*').eq('is_active', true).is('player2_name', null);
+        const list = document.getElementById('room-list');
+        list.innerHTML = (data && data.length) ? "" : "<p style='color:#94a3b8'>اتاقی یافت نشد...</p>";
+        if(data) data.forEach(r => {
+            list.innerHTML += `<div class="room-item"><span>کد اتاق: <b class="room-code">${r.room_code}</b></span><button class="menu-btn" style="width:70px; padding:5px; font-size:0.9rem;" onclick="joinRoom('${r.id}')">ورود</button></div>`;
+        });
+    }
+
+    async function createOnlineRoom() {
+        const code = Math.floor(1000 + Math.random() * 9000);
+        const { data } = await supabaseClient.from('rooms').insert([{ 
+            player1_name: currentUser, 
+            room_code: code.toString(),
+            board: Array(9).fill(""), 
+            turn: "X", 
+            scores: {X:0, O:0},
+            is_active: true
+        }]).select();
+        if(data) { currentRoomId = data[0].id; mySymbol = "X"; setupOnline(); }
+    }
+
+    async function joinRoom(id) {
+        await supabaseClient.from('rooms').update({ player2_name: currentUser }).eq('id', id);
+        currentRoomId = id; mySymbol = "O"; setupOnline();
+    }
+
+    function setupOnline() {
+        gameMode = "online"; showScreen('game-screen');
+        supabaseClient.channel(`room:${currentRoomId}`)
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rooms', filter: `id=eq.${currentRoomId}` }, payload => {
+                const d = payload.new;
+                board = d.board; currentPlayer = d.turn; scores = d.scores; rounds = d.rounds_played + 1;
+                if(!d.is_active) { alert("اتاق بسته شد."); showScreen('menu-screen'); return; }
+                renderBoard();
+                if(rounds > 5 || scores.X >= 5 || scores.O >= 5) { showFinalResult(); return; }
+                if(currentPlayer === mySymbol && !checkWinner(board)) startTimer(); else clearInterval(moveTimer);
+            }).subscribe();
+    }
+
+    async function syncMove() {
+        await supabaseClient.from('rooms').update({ board, turn: currentPlayer, scores, rounds_played: rounds-1 }).eq('id', currentRoomId);
+    }
+
+    function startOffline() { gameMode = "offline"; resetScores(); showScreen('game-screen'); }
+    function showAiLevels() { showScreen('ai-screen'); }
+    function startAi(lvl) { aiLevel = lvl; gameMode = "ai"; resetScores(); showScreen('game-screen'); }
+    function resetGame() { board = Array(9).fill(""); currentPlayer = "X"; renderBoard(); if(gameMode !== "") startTimer(); }
+    function resetScores() { scores = {X:0, O:0}; rounds = 1; document.getElementById('round-info').innerText = "راند: 1 / 5"; resetGame(); }
+</script>
 </body>
 </html>
-
