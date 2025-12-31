@@ -64,6 +64,8 @@
             <div class="cell" onclick="handleMove(6)"></div><div class="cell" onclick="handleMove(7)"></div><div class="cell" onclick="handleMove(8)"></div>
         </div>
         <div id="round-info" style="margin-top:10px; font-weight:bold;">راند: 1 / 5</div>
+        
+        <button class="menu-btn" onclick="exitCurrentGame()" style="background:#ef4444; margin-top: 15px; font-size: 0.9rem; padding: 12px;">🚪 خروج از این اتاق</button>
     </div>
 
     <div id="result-screen" class="hidden">
@@ -98,11 +100,32 @@
         if(id !== 'lobby-screen') clearInterval(lobbyInterval);
     }
 
-    // --- بخش آنلاین ---
+    // تابع خروج سراسری
+    async function exitCurrentGame() {
+        const confirmExit = confirm("آیا از خروج مطمئن هستید؟ بازی نیمه‌تمام می‌ماند.");
+        if (!confirmExit) return;
+
+        clearInterval(moveTimer);
+        
+        if (gameMode === "online" && currentRoomId) {
+            // بستن اتاق در دیتابیس برای طرف مقابل
+            await supabaseClient.from('rooms').update({ is_active: false }).eq('id', currentRoomId);
+        }
+
+        // بازگشت به منوی اصلی
+        showScreen('menu-screen');
+        // ریست کردن متغیرها
+        currentRoomId = null;
+        gameMode = "";
+        scores = { X: 0, O: 0 };
+        rounds = 1;
+        board = Array(9).fill("");
+    }
+
     function openLobby() {
         showScreen('lobby-screen');
         fetchRooms();
-        lobbyInterval = setInterval(fetchRooms, 5000); // آپدیت لیست هر ۵ ثانیه
+        lobbyInterval = setInterval(fetchRooms, 5000);
     }
 
     async function fetchRooms() {
@@ -136,6 +159,7 @@
         if(data) { 
             currentRoomId = id; 
             mySymbol = "O"; 
+            p1Name = data[0].player1_name;
             p2Name = currentUser;
             setupOnline(); 
         }
@@ -153,7 +177,11 @@
                 p1Name = d.player1_name; p2Name = d.player2_name;
 
                 if(!d.is_active) {
-                    if(rounds <= 5) finalizeGame("حریف از بازی خارج شد! شما برنده شدید.");
+                    if(rounds <= 5 && !document.getElementById('result-screen').classList.contains('hidden') === false) {
+                        alert("طرف مقابل از بازی خارج شد یا اتاق بسته شد.");
+                        showScreen('menu-screen');
+                        clearInterval(moveTimer);
+                    }
                     return;
                 }
 
@@ -176,7 +204,7 @@
             rounds++;
             board = Array(9).fill("");
         } else if (!board.includes("")) {
-            rounds++; // مساوی
+            rounds++;
             board = Array(9).fill("");
         }
         
@@ -199,7 +227,6 @@
             document.getElementById('sec').innerText = s;
             if(s <= 0) {
                 clearInterval(moveTimer);
-                // اگر زمان تمام شود، بازیکن مقابل برنده کل بازی می‌شود
                 const finalWinner = (mySymbol === "X") ? (p2Name || "حریف") : p1Name;
                 finalizeGame(`زمان شما تمام شد! برنده نهایی: ${finalWinner}`);
             }
@@ -242,7 +269,6 @@
         document.getElementById('game-status').innerText = `نوبت: ${turnName}`;
     }
 
-    // --- سایر حالت‌ها ---
     function startOffline() {
         gameMode = "offline"; p1Name = "شما (X)"; p2Name = "حریف (O)"; 
         scores = {X:0, O:0}; rounds = 1; board = Array(9).fill("");
